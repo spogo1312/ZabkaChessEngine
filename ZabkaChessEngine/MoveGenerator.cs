@@ -273,7 +273,7 @@ namespace ZabkaChessEngine
         public bool IsMoveLegal(Board board, Move move, bool isWhiteTurn)
         {
             // Ensure the move follows the movement rules of the piece
-            if (!IsPieceMoveValid(board, move))
+            if (!IsPieceMoveValid(board, move, board.EnPassantTarget))
             {
                 return false;
             }
@@ -286,13 +286,13 @@ namespace ZabkaChessEngine
             return !IsKingInCheck(boardCopy, isWhiteTurn);
         }
 
-        private bool IsPieceMoveValid(Board board, Move move)
+        private bool IsPieceMoveValid(Board board, Move move, (int x, int y)? enPassantTarget)
         {
             Piece piece = board.Squares[move.FromX, move.FromY];
             switch (piece.Type)
             {
                 case PieceType.Pawn:
-                    return IsValidPawnMove(board, move, piece);
+                    return IsValidPawnMove(board, move, piece, enPassantTarget);
                 case PieceType.Rook:
                     return IsValidRookMove(board, move, piece);
                 case PieceType.Knight:
@@ -308,11 +308,10 @@ namespace ZabkaChessEngine
             }
         }
 
-        private bool IsValidPawnMove(Board board, Move move, Piece piece)
+        private bool IsValidPawnMove(Board board, Move move, Piece piece, (int x, int y)? enPassantTarget)
         {
             int direction = piece.Color == PieceColor.White ? -1 : 1;
             int startRow = piece.Color == PieceColor.White ? 6 : 1;
-            int opponentStartRow = piece.Color == PieceColor.White ? 1 : 6;
 
             // Single move forward
             if (move.ToX == move.FromX + direction && move.ToY == move.FromY && board.Squares[move.ToX, move.ToY].Type == PieceType.Empty)
@@ -327,19 +326,14 @@ namespace ZabkaChessEngine
             }
 
             // Capturing move
-            if (move.ToX == move.FromX + direction && Math.Abs(move.ToY - move.FromY) == 1 && board.Squares[move.ToX, move.ToY].Color != piece.Color && board.Squares[move.ToX, move.ToY].Type != PieceType.Empty)
+            if (move.ToX == move.FromX + direction && Math.Abs(move.ToY - move.FromY) == 1)
             {
-                return true;
-            }
-
-            // En passant
-            if (LastMove != null && LastMove.ToX == move.FromX && LastMove.ToY == move.ToY && board.Squares[move.FromX, move.ToY].Type == PieceType.Pawn && board.Squares[move.FromX, move.ToY].Color != piece.Color)
-            {
-                if (piece.Color == PieceColor.White && move.FromX == 3 && move.ToX == 2)
+                if (board.Squares[move.ToX, move.ToY].Color != piece.Color && board.Squares[move.ToX, move.ToY].Type != PieceType.Empty)
                 {
                     return true;
                 }
-                if (piece.Color == PieceColor.Black && move.FromX == 4 && move.ToX == 5)
+                // En passant
+                if (enPassantTarget.HasValue && enPassantTarget.Value.x == move.ToX && enPassantTarget.Value.y == move.ToY)
                 {
                     return true;
                 }
@@ -457,6 +451,7 @@ namespace ZabkaChessEngine
                     newBoard.Squares[row, col] = new Piece(board.Squares[row, col].Type, board.Squares[row, col].Color);
                 }
             }
+            newBoard.EnPassantTarget = board.EnPassantTarget;
             return newBoard;
         }
 
@@ -464,6 +459,23 @@ namespace ZabkaChessEngine
         {
             board.Squares[move.ToX, move.ToY] = board.Squares[move.FromX, move.FromY];
             board.Squares[move.FromX, move.FromY] = new Piece(PieceType.Empty, PieceColor.None);
+
+            // Handle en passant capture
+            if (board.Squares[move.ToX, move.ToY].Type == PieceType.Pawn && move.ToY != move.FromY && board.Squares[move.ToX, move.ToY].Type == PieceType.Empty)
+            {
+                int direction = board.Squares[move.ToX, move.ToY].Color == PieceColor.White ? 1 : -1;
+                board.Squares[move.ToX - direction, move.ToY] = new Piece(PieceType.Empty, PieceColor.None);
+            }
+
+            // Update en passant target
+            if (board.Squares[move.ToX, move.ToY].Type == PieceType.Pawn && Math.Abs(move.ToX - move.FromX) == 2)
+            {
+                board.EnPassantTarget = ((move.FromX + move.ToX) / 2, move.ToY);
+            }
+            else
+            {
+                board.EnPassantTarget = null;
+            }
         }
 
         private bool IsKingInCheck(Board board, bool isWhiteTurn)

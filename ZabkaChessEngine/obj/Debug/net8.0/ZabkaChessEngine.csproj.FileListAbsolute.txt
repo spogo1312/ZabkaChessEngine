@@ -12,3 +12,4 @@ C:\Dev\ZabkaChessEngine\ZabkaChessEngine\obj\Debug\net8.0\refint\ZabkaChessEngin
 C:\Dev\ZabkaChessEngine\ZabkaChessEngine\obj\Debug\net8.0\ZabkaChessEngine.pdb
 C:\Dev\ZabkaChessEngine\ZabkaChessEngine\obj\Debug\net8.0\ZabkaChessEngine.genruntimeconfig.cache
 C:\Dev\ZabkaChessEngine\ZabkaChessEngine\obj\Debug\net8.0\ref\ZabkaChessEngine.dll
+C:\Dev\ZabkaChessEngine\ZabkaChessEngine\obj\Debug\net8.0\ZabkaChessEngine.sourcelink.json

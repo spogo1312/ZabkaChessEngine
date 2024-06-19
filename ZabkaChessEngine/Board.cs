@@ -39,11 +39,14 @@ namespace ZabkaChessEngine
     public class Board
     {
         public Piece[,] Squares { get; set; }
+        public (int x, int y)? EnPassantTarget { get; set; }
 
         public Board()
         {
             Squares = new Piece[8, 8];
+            EnPassantTarget = null;
             InitializeBoard();
+
         }
 
         private void InitializeBoard()
@@ -125,6 +128,17 @@ namespace ZabkaChessEngine
                         col++;
                     }
                 }
+            }
+            // Parse en passant target square
+            if (parts[3] != "-")
+            {
+                int enPassantX = 8 - int.Parse(parts[3][1].ToString());
+                int enPassantY = parts[3][0] - 'a';
+                EnPassantTarget = (enPassantX, enPassantY);
+            }
+            else
+            {
+                EnPassantTarget = null;
             }
         }
 

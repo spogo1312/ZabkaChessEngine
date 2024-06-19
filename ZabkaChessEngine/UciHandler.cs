@@ -10,6 +10,7 @@ public class UciHandler
     private static readonly Random random = new Random();
     private bool isBotWhite;
     private bool isWhiteTurn;
+    private bool manualPlayMode;
 
     public UciHandler(bool isBotWhite)
     {
@@ -18,6 +19,7 @@ public class UciHandler
         moveValidator = new MoveValidator();
         this.isBotWhite = isBotWhite;
         this.isWhiteTurn = true;  // White always starts in chess
+        this.manualPlayMode = false;
     }
 
     public void Start()
@@ -27,8 +29,8 @@ public class UciHandler
             string input = Console.ReadLine();
             if (input == "uci")
             {
-                Console.WriteLine("id name RandomMoveBot");
-                Console.WriteLine("id author YourName");
+                Console.WriteLine("id name Zabka");
+                Console.WriteLine("id author Jakub");
                 Console.WriteLine("uciok");
             }
             else if (input.StartsWith("position"))
@@ -70,12 +72,17 @@ public class UciHandler
             {
                 break;
             }
+            else if (input == "playmanual")
+            {
+                manualPlayMode = true;
+                Console.WriteLine("Manual play mode activated. You can now make moves for both sides.");
+            }
             else if (input.StartsWith("move"))
             {
                 string move = input.Substring(5);
                 if (ApplyMove(move, true))
                 {
-                    if (IsBotTurn())
+                    if (IsBotTurn() && !manualPlayMode)
                     {
                         MakeBotMove();
                     }
@@ -111,7 +118,7 @@ public class UciHandler
         if (moveValidator.IsMoveLegal(board, userMove, isWhiteTurn))
         {
             // Handle en passant capture
-            if (board.Squares[fromX, fromY].Type == PieceType.Pawn && toX == fromX + (isWhiteTurn ? -1 : 1) && board.Squares[toX, toY].Type == PieceType.Empty)
+            if (board.Squares[fromX, fromY].Type == PieceType.Pawn && toX == fromX + (isWhiteTurn ? -1 : 1) && toY != fromY && board.Squares[toX, toY].Type == PieceType.Empty)
             {
                 board.Squares[fromX, toY] = new Piece(PieceType.Empty, PieceColor.None);
             }
