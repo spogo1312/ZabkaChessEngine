@@ -1,0 +1,14 @@
+C:\Dev\ZabkaChessEngine\ZabkaChessEngine\bin\Debug\net8.0\ZabkaChessEngine.exe
+C:\Dev\ZabkaChessEngine\ZabkaChessEngine\bin\Debug\net8.0\ZabkaChessEngine.deps.json
+C:\Dev\ZabkaChessEngine\ZabkaChessEngine\bin\Debug\net8.0\ZabkaChessEngine.runtimeconfig.json
+C:\Dev\ZabkaChessEngine\ZabkaChessEngine\bin\Debug\net8.0\ZabkaChessEngine.dll
+C:\Dev\ZabkaChessEngine\ZabkaChessEngine\bin\Debug\net8.0\ZabkaChessEngine.pdb
+C:\Dev\ZabkaChessEngine\ZabkaChessEngine\obj\Debug\net8.0\ZabkaChessEngine.GeneratedMSBuildEditorConfig.editorconfig
+C:\Dev\ZabkaChessEngine\ZabkaChessEngine\obj\Debug\net8.0\ZabkaChessEngine.AssemblyInfoInputs.cache
+C:\Dev\ZabkaChessEngine\ZabkaChessEngine\obj\Debug\net8.0\ZabkaChessEngine.AssemblyInfo.cs
+C:\Dev\ZabkaChessEngine\ZabkaChessEngine\obj\Debug\net8.0\ZabkaChessEngine.csproj.CoreCompileInputs.cache
+C:\Dev\ZabkaChessEngine\ZabkaChessEngine\obj\Debug\net8.0\ZabkaChessEngine.dll
+C:\Dev\ZabkaChessEngine\ZabkaChessEngine\obj\Debug\net8.0\refint\ZabkaChessEngine.dll
+C:\Dev\ZabkaChessEngine\ZabkaChessEngine\obj\Debug\net8.0\ZabkaChessEngine.pdb
+C:\Dev\ZabkaChessEngine\ZabkaChessEngine\obj\Debug\net8.0\ZabkaChessEngine.genruntimeconfig.cache
+C:\Dev\ZabkaChessEngine\ZabkaChessEngine\obj\Debug\net8.0\ref\ZabkaChessEngine.dll
