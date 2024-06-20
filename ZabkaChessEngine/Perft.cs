@@ -70,8 +70,20 @@ namespace ZabkaChessEngine
         {
             string from = $"{(char)(move.FromY + 'a')}{8 - move.FromX}";
             string to = $"{(char)(move.ToY + 'a')}{8 - move.ToX}";
-            string promotion = move.Promotion != PieceType.Empty ? $"{move.Promotion.ToString()[0].ToString().ToLower()}" : "";
+            string promotion = move.Promotion != PieceType.Empty ? GetPromotionString(move.Promotion) : "";
             return from + to + promotion;
+        }
+
+        private string GetPromotionString(PieceType promotion)
+        {
+            return promotion switch
+            {
+                PieceType.Queen => "q",
+                PieceType.Rook => "r",
+                PieceType.Bishop => "b",
+                PieceType.Knight => "n",
+                _ => ""
+            };
         }
 
         private Board CopyBoard(Board board)

@@ -42,6 +42,7 @@ namespace ZabkaChessEngine
                     {
                         List<Move> pieceMoves = GeneratePieceMoves(board, piece, fromX, fromY);
                         allPossibleMoves.AddRange(pieceMoves);
+                        
                     }
                 }
             }
