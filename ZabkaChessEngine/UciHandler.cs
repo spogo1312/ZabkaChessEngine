@@ -110,9 +110,15 @@ namespace ZabkaChessEngine
                 }
                 else if (input.StartsWith("perft"))
                 {
-                    int depth = int.Parse(input.Split(' ')[1]);
-                    long nodes = perft.PerformPerft(board, depth);
-                    Console.WriteLine($"Perft result at depth {depth}: {nodes}");
+                    string[] parts = input.Split(' ');
+                    if (parts.Length == 2 && int.TryParse(parts[1], out int depth))
+                    {
+                        perft.PerformPerft(board, depth);
+                    }
+                    else
+                    {
+                        Console.WriteLine("Invalid perft command. Usage: perft <depth>");
+                    }
                 }
             }
         }

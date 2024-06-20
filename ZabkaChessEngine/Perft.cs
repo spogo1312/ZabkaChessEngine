@@ -17,7 +17,19 @@ namespace ZabkaChessEngine
             moveValidator = new MoveValidator();
         }
 
-        public long PerformPerft(Board board, int depth)
+        public void PerformPerft(Board board, int depth)
+        {
+            Dictionary<string, long> moveCounts = new Dictionary<string, long>();
+            long totalNodes = PerformPerft(board, depth, moveCounts);
+
+            Console.WriteLine($"Total: {totalNodes}");
+            foreach (var moveCount in moveCounts)
+            {
+                Console.WriteLine($"{moveCount.Key} - {moveCount.Value}");
+            }
+        }
+
+        private long PerformPerft(Board board, int depth, Dictionary<string, long> moveCounts)
         {
             if (depth == 0)
             {
@@ -34,11 +46,32 @@ namespace ZabkaChessEngine
                     Board boardCopy = CopyBoard(board);
                     moveValidator.ApplyMove(boardCopy, move);
                     boardCopy.IsWhiteTurn = !boardCopy.IsWhiteTurn;
-                    nodes += PerformPerft(boardCopy, depth - 1);
+
+                    string moveString = MoveToString(move);
+
+                    long childNodes = PerformPerft(boardCopy, depth - 1, moveCounts);
+                    nodes += childNodes;
+
+                    if (depth == 1)
+                    {
+                        if (!moveCounts.ContainsKey(moveString))
+                        {
+                            moveCounts[moveString] = 0;
+                        }
+                        moveCounts[moveString] += childNodes;
+                    }
                 }
             }
 
             return nodes;
+        }
+
+        private string MoveToString(Move move)
+        {
+            string from = $"{(char)(move.FromY + 'a')}{8 - move.FromX}";
+            string to = $"{(char)(move.ToY + 'a')}{8 - move.ToX}";
+            string promotion = move.Promotion != PieceType.Empty ? $"{move.Promotion.ToString()[0].ToString().ToLower()}" : "";
+            return from + to + promotion;
         }
 
         private Board CopyBoard(Board board)
