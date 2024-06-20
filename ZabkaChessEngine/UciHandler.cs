@@ -30,8 +30,17 @@ public class UciHandler
             if (input == "uci")
             {
                 Console.WriteLine("id name Zabka");
-                Console.WriteLine("id author Jakub");
+                Console.WriteLine("id author JakPod");
                 Console.WriteLine("uciok");
+            }
+            else if (input == "isready")
+            {
+                Console.WriteLine("readyok");
+            }
+            else if (input == "ucinewgame")
+            {
+                board = new Board();
+                isWhiteTurn = true;
             }
             else if (input.StartsWith("position"))
             {
@@ -59,14 +68,7 @@ public class UciHandler
             }
             else if (input.StartsWith("go"))
             {
-                if (IsBotTurn())
-                {
-                    MakeBotMove();
-                }
-            }
-            else if (input == "isready")
-            {
-                Console.WriteLine("readyok");
+                MakeBotMove();
             }
             else if (input == "quit")
             {
@@ -77,10 +79,15 @@ public class UciHandler
                 manualPlayMode = true;
                 Console.WriteLine("Manual play mode activated. You can now make moves for both sides.");
             }
+            else if (input == "playbotvsbot")
+            {
+                manualPlayMode = false;
+                PlayBotVsBot();
+            }
             else if (input.StartsWith("move"))
             {
                 string move = input.Substring(5);
-                if (ApplyMove(move, true))
+                if (ApplyMove(move, !manualPlayMode))
                 {
                     if (IsBotTurn() && !manualPlayMode)
                     {
@@ -168,4 +175,46 @@ public class UciHandler
             Console.WriteLine("bestmove (none)");
         }
     }
+    private void PlayBotVsBot()
+    {
+        while (true)
+        {
+            if (MakeBotMoveWithCheck())
+            {
+                break;
+            }
+        }
+    }
+
+    private bool MakeBotMoveWithCheck()
+    {
+        List<Move> allMoves = moveGenerator.GenerateAllMoves(board, isWhiteTurn);
+        List<Move> legalMoves = new List<Move>();
+
+        foreach (Move move in allMoves)
+        {
+            if (moveValidator.IsMoveLegal(board, move, isWhiteTurn))
+            {
+                legalMoves.Add(move);
+            }
+        }
+
+        if (legalMoves.Count > 0)
+        {
+            Move move = legalMoves[random.Next(legalMoves.Count)];
+            string moveString = $"{(char)(move.FromY + 'a')}{8 - move.FromX}{(char)(move.ToY + 'a')}{8 - move.ToX}";
+            Console.WriteLine($"bestmove {moveString}");
+
+            ApplyMove(moveString, false);
+            isWhiteTurn = !isWhiteTurn;  // Switch turn
+
+            return false;  // Continue game
+        }
+        else
+        {
+            Console.WriteLine(isWhiteTurn ? "Black wins" : "White wins");
+            return true;  // End game
+        }
+    }
+}
 }
