@@ -457,7 +457,7 @@ namespace ZabkaChessEngine
             return newBoard;
         }
 
-        private void ApplyMove(Board board, Move move)
+        public void ApplyMove(Board board, Move move)
         {
             board.Squares[move.ToX, move.ToY] = board.Squares[move.FromX, move.FromY];
             board.Squares[move.FromX, move.FromY] = new Piece(PieceType.Empty, PieceColor.None);

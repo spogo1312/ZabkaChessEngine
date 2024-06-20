@@ -9,6 +9,7 @@ namespace ZabkaChessEngine
         private Board board;
         private MoveGenerator moveGenerator;
         private MoveValidator moveValidator;
+        private Perft perft;
         private static readonly Random random = new Random();
         private bool isBotWhite;
         private bool isWhiteTurn;
@@ -19,6 +20,7 @@ namespace ZabkaChessEngine
             board = new Board();
             moveGenerator = new MoveGenerator();
             moveValidator = new MoveValidator();
+            perft = new Perft();
             this.isBotWhite = isBotWhite;
             this.isWhiteTurn = true;  // White always starts in chess
             this.manualPlayMode = false;
@@ -105,6 +107,12 @@ namespace ZabkaChessEngine
                 {
                     Console.WriteLine("Current board state:");
                     board.PrintBoard();
+                }
+                else if (input.StartsWith("perft"))
+                {
+                    int depth = int.Parse(input.Split(' ')[1]);
+                    long nodes = perft.PerformPerft(board, depth);
+                    Console.WriteLine($"Perft result at depth {depth}: {nodes}");
                 }
             }
         }

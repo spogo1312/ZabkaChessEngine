@@ -40,11 +40,14 @@ namespace ZabkaChessEngine
     {
         public Piece[,] Squares { get; set; }
         public (int x, int y)? EnPassantTarget { get; set; }
+        public bool IsWhiteTurn { get; set; }
+
 
         public Board()
         {
             Squares = new Piece[8, 8];
             EnPassantTarget = null;
+            IsWhiteTurn = true;
             InitializeBoard();
 
         }
@@ -129,6 +132,8 @@ namespace ZabkaChessEngine
                     }
                 }
             }
+            // Parse side to move
+            IsWhiteTurn = parts[1] == "w";
             // Parse en passant target square
             if (parts[3] != "-")
             {
