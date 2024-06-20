@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -270,6 +271,7 @@ namespace ZabkaChessEngine
     public class MoveValidator
     {
         public Move LastMove { get; set; }
+        public (int x, int y)? enPassantTarget;
         public bool IsMoveLegal(Board board, Move move, bool isWhiteTurn)
         {
             // Ensure the move follows the movement rules of the piece
@@ -288,7 +290,7 @@ namespace ZabkaChessEngine
 
         private bool IsPieceMoveValid(Board board, Move move, (int x, int y)? enPassantTarget)
         {
-            Piece piece = board.Squares[move.FromX, move.FromY];
+            Piece piece = board.Squares[move.FromX, move.FromY];        
             switch (piece.Type)
             {
                 case PieceType.Pawn:
@@ -327,7 +329,7 @@ namespace ZabkaChessEngine
 
             // Capturing move
             if (move.ToX == move.FromX + direction && Math.Abs(move.ToY - move.FromY) == 1)
-            {
+            {   
                 if (board.Squares[move.ToX, move.ToY].Color != piece.Color && board.Squares[move.ToX, move.ToY].Type != PieceType.Empty)
                 {
                     return true;
@@ -471,11 +473,15 @@ namespace ZabkaChessEngine
             if (board.Squares[move.ToX, move.ToY].Type == PieceType.Pawn && Math.Abs(move.ToX - move.FromX) == 2)
             {
                 board.EnPassantTarget = ((move.FromX + move.ToX) / 2, move.ToY);
+                
             }
             else
             {
                 board.EnPassantTarget = null;
             }
+            //UpdateB Public Variable
+
+            enPassantTarget = board.EnPassantTarget;
         }
 
         private bool IsKingInCheck(Board board, bool isWhiteTurn)

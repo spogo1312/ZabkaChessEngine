@@ -125,7 +125,7 @@ public class UciHandler
 
             board.Squares[toX, toY] = board.Squares[fromX, fromY];
             board.Squares[fromX, fromY] = new Piece(PieceType.Empty, PieceColor.None);
-
+            board.EnPassantTarget = moveValidator.enPassantTarget;
             moveValidator.LastMove = userMove;
 
             Console.WriteLine("Current board state:");
