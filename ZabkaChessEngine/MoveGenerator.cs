@@ -13,13 +13,15 @@ namespace ZabkaChessEngine
         public int FromY { get; set; }
         public int ToX { get; set; }
         public int ToY { get; set; }
+        public PieceType Promotion { get; set; }  // Added promotion piece type
 
-        public Move(int fromX, int fromY, int toX, int toY)
+        public Move(int fromX, int fromY, int toX, int toY, PieceType promotion = PieceType.Empty)
         {
             FromX = fromX;
             FromY = fromY;
             ToX = toX;
             ToY = toY;
+            Promotion = promotion;
         }
     }
 
@@ -86,50 +88,71 @@ namespace ZabkaChessEngine
             // Move forward
             if (IsInBounds(fromX + direction, fromY) && board.Squares[fromX + direction, fromY].Type == PieceType.Empty)
             {
-                moves.Add(new Move(fromX, fromY, fromX + direction, fromY));
-                // Double move from start position
-                if (fromX == startRow && IsInBounds(fromX + 2 * direction, fromY) && board.Squares[fromX + 2 * direction, fromY].Type == PieceType.Empty)
+                if (fromX + direction == promotionRow)
                 {
-                    moves.Add(new Move(fromX, fromY, fromX + 2 * direction, fromY));
+                    // Add all promotion options
+                    moves.Add(new Move(fromX, fromY, fromX + direction, fromY, PieceType.Queen));
+                    moves.Add(new Move(fromX, fromY, fromX + direction, fromY, PieceType.Rook));
+                    moves.Add(new Move(fromX, fromY, fromX + direction, fromY, PieceType.Bishop));
+                    moves.Add(new Move(fromX, fromY, fromX + direction, fromY, PieceType.Knight));
+                }
+                else
+                {
+                    moves.Add(new Move(fromX, fromY, fromX + direction, fromY));
+                    if (fromX == startRow && IsInBounds(fromX + 2 * direction, fromY) && board.Squares[fromX + 2 * direction, fromY].Type == PieceType.Empty)
+                    {
+                        moves.Add(new Move(fromX, fromY, fromX + 2 * direction, fromY));
+                    }
                 }
             }
 
             // Capture diagonally
             if (IsInBounds(fromX + direction, fromY - 1) && board.Squares[fromX + direction, fromY - 1].Color == (piece.Color == PieceColor.White ? PieceColor.Black : PieceColor.White))
             {
-                moves.Add(new Move(fromX, fromY, fromX + direction, fromY - 1));
+                if (fromX + direction == promotionRow)
+                {
+                    // Add all promotion options
+                    moves.Add(new Move(fromX, fromY, fromX + direction, fromY - 1, PieceType.Queen));
+                    moves.Add(new Move(fromX, fromY, fromX + direction, fromY - 1, PieceType.Rook));
+                    moves.Add(new Move(fromX, fromY, fromX + direction, fromY - 1, PieceType.Bishop));
+                    moves.Add(new Move(fromX, fromY, fromX + direction, fromY - 1, PieceType.Knight));
+                }
+                else
+                {
+                    moves.Add(new Move(fromX, fromY, fromX + direction, fromY - 1));
+                }
             }
             if (IsInBounds(fromX + direction, fromY + 1) && board.Squares[fromX + direction, fromY + 1].Color == (piece.Color == PieceColor.White ? PieceColor.Black : PieceColor.White))
             {
-                moves.Add(new Move(fromX, fromY, fromX + direction, fromY + 1));
+                if (fromX + direction == promotionRow)
+                {
+                    // Add all promotion options
+                    moves.Add(new Move(fromX, fromY, fromX + direction, fromY + 1, PieceType.Queen));
+                    moves.Add(new Move(fromX, fromY, fromX + direction, fromY + 1, PieceType.Rook));
+                    moves.Add(new Move(fromX, fromY, fromX + direction, fromY + 1, PieceType.Bishop));
+                    moves.Add(new Move(fromX, fromY, fromX + direction, fromY + 1, PieceType.Knight));
+                }
+                else
+                {
+                    moves.Add(new Move(fromX, fromY, fromX + direction, fromY + 1));
+                }
             }
 
             // En passant
-            if (IsInBounds(fromX, fromY - 1) && board.Squares[fromX, fromY - 1].Type == PieceType.Pawn && board.Squares[fromX, fromY - 1].Color != piece.Color)
+            if (board.EnPassantTarget.HasValue)
             {
-                if (piece.Color == PieceColor.White && fromX == 3 && board.Squares[fromX - 1, fromY - 1].Type == PieceType.Empty)
+                if (fromX == (piece.Color == PieceColor.White ? 3 : 4))
                 {
-                    moves.Add(new Move(fromX, fromY, fromX - 1, fromY - 1));
-                }
-                if (piece.Color == PieceColor.Black && fromX == 4 && board.Squares[fromX + 1, fromY - 1].Type == PieceType.Empty)
-                {
-                    moves.Add(new Move(fromX, fromY, fromX + 1, fromY - 1));
+                    if (board.EnPassantTarget.Value == (fromX + direction, fromY - 1))
+                    {
+                        moves.Add(new Move(fromX, fromY, fromX + direction, fromY - 1));
+                    }
+                    if (board.EnPassantTarget.Value == (fromX + direction, fromY + 1))
+                    {
+                        moves.Add(new Move(fromX, fromY, fromX + direction, fromY + 1));
+                    }
                 }
             }
-            if (IsInBounds(fromX, fromY + 1) && board.Squares[fromX, fromY + 1].Type == PieceType.Pawn && board.Squares[fromX, fromY + 1].Color != piece.Color)
-            {
-                if (piece.Color == PieceColor.White && fromX == 3 && board.Squares[fromX - 1, fromY + 1].Type == PieceType.Empty)
-                {
-                    moves.Add(new Move(fromX, fromY, fromX - 1, fromY + 1));
-                }
-                if (piece.Color == PieceColor.Black && fromX == 4 && board.Squares[fromX + 1, fromY + 1].Type == PieceType.Empty)
-                {
-                    moves.Add(new Move(fromX, fromY, fromX + 1, fromY + 1));
-                }
-            }
-
-            // Handle promotion (simplified, typically you'll want to handle the promotion choice)
-            moves.RemoveAll(move => move.ToX == promotionRow && piece.Type == PieceType.Pawn);
 
             return moves;
         }
@@ -459,26 +482,36 @@ namespace ZabkaChessEngine
 
         public void ApplyMove(Board board, Move move)
         {
-            board.Squares[move.ToX, move.ToY] = board.Squares[move.FromX, move.FromY];
+            Piece movingPiece = board.Squares[move.FromX, move.FromY];
+
+            if (move.Promotion != PieceType.Empty)
+            {
+                board.Squares[move.ToX, move.ToY] = new Piece(move.Promotion, movingPiece.Color);
+            }
+            else
+            {
+                board.Squares[move.ToX, move.ToY] = movingPiece;
+            }
+
             board.Squares[move.FromX, move.FromY] = new Piece(PieceType.Empty, PieceColor.None);
 
             // Handle en passant capture
-            if (board.Squares[move.ToX, move.ToY].Type == PieceType.Pawn && move.ToY != move.FromY && board.Squares[move.ToX, move.ToY].Type == PieceType.Empty)
+            if (movingPiece.Type == PieceType.Pawn && move.ToY != move.FromY && board.Squares[move.ToX, move.ToY].Type == PieceType.Empty)
             {
-                int direction = board.Squares[move.ToX, move.ToY].Color == PieceColor.White ? 1 : -1;
+                int direction = movingPiece.Color == PieceColor.White ? 1 : -1;
                 board.Squares[move.ToX - direction, move.ToY] = new Piece(PieceType.Empty, PieceColor.None);
             }
 
             // Update en passant target
-            if (board.Squares[move.ToX, move.ToY].Type == PieceType.Pawn && Math.Abs(move.ToX - move.FromX) == 2)
+            if (movingPiece.Type == PieceType.Pawn && Math.Abs(move.ToX - move.FromX) == 2)
             {
-                board.EnPassantTarget = ((move.FromX + move.ToX) / 2, move.ToY);
-                
+                board.EnPassantTarget = ((move.FromX + move.ToX) / 2, move.FromY);
             }
             else
             {
                 board.EnPassantTarget = null;
             }
+
             //UpdateB Public Variable
 
             enPassantTarget = board.EnPassantTarget;
