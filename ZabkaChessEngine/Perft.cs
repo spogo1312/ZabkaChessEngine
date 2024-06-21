@@ -20,7 +20,28 @@ namespace ZabkaChessEngine
         public void PerformPerft(Board board, int depth)
         {
             Dictionary<string, long> moveCounts = new Dictionary<string, long>();
-            long totalNodes = PerformPerft(board, depth, moveCounts);
+            long totalNodes = 0;
+
+            List<Move> moves = moveGenerator.GenerateAllMoves(board, board.IsWhiteTurn);
+            foreach (Move move in moves)
+            {
+                if (moveValidator.IsMoveLegal(board, move, board.IsWhiteTurn))
+                {
+                    Board boardCopy = CopyBoard(board);
+                    moveValidator.ApplyMove(boardCopy, move);
+                    boardCopy.IsWhiteTurn = !boardCopy.IsWhiteTurn;
+
+                    long childNodes = PerformPerftRecursive(boardCopy, depth - 1);
+                    totalNodes += childNodes;
+
+                    string moveString = MoveToString(move);
+                    if (!moveCounts.ContainsKey(moveString))
+                    {
+                        moveCounts[moveString] = 0;
+                    }
+                    moveCounts[moveString] += childNodes;
+                }
+            }
 
             Console.WriteLine($"Total: {totalNodes}");
             foreach (var moveCount in moveCounts)
@@ -29,7 +50,7 @@ namespace ZabkaChessEngine
             }
         }
 
-        private long PerformPerft(Board board, int depth, Dictionary<string, long> moveCounts)
+        private long PerformPerftRecursive(Board board, int depth)
         {
             if (depth == 0)
             {
@@ -47,19 +68,7 @@ namespace ZabkaChessEngine
                     moveValidator.ApplyMove(boardCopy, move);
                     boardCopy.IsWhiteTurn = !boardCopy.IsWhiteTurn;
 
-                    string moveString = MoveToString(move);
-
-                    long childNodes = PerformPerft(boardCopy, depth - 1, moveCounts);
-                    nodes += childNodes;
-
-                    if (depth == 1)
-                    {
-                        if (!moveCounts.ContainsKey(moveString))
-                        {
-                            moveCounts[moveString] = 0;
-                        }
-                        moveCounts[moveString] += childNodes;
-                    }
+                    nodes += PerformPerftRecursive(boardCopy, depth - 1);
                 }
             }
 
@@ -101,4 +110,5 @@ namespace ZabkaChessEngine
             return newBoard;
         }
     }
+
 }
