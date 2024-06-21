@@ -310,7 +310,7 @@ namespace ZabkaChessEngine
 
             // Check if the king is in check after the move
             return !IsKingInCheck(boardCopy, isWhiteTurn);
-        }
+        }   
 
         private bool IsPieceMoveValid(Board board, Move move, (int x, int y)? enPassantTarget)
         {
@@ -361,7 +361,17 @@ namespace ZabkaChessEngine
                 // En passant
                 if (enPassantTarget.HasValue && enPassantTarget.Value.x == move.ToX && enPassantTarget.Value.y == move.ToY)
                 {
-                    return true;
+                    // Temporarily apply the en passant move and check for king safety
+                    Board boardCopy = CopyBoard(board);
+                    ApplyMove(boardCopy, move);
+
+                    // Remove the pawn captured en passant
+                    boardCopy.Squares[move.FromX, move.ToY] = new Piece(PieceType.Empty, PieceColor.None);
+
+                    if (!IsKingInCheck(boardCopy, piece.Color == PieceColor.White))
+                    {
+                        return true;
+                    }
                 }
             }
 
@@ -485,6 +495,7 @@ namespace ZabkaChessEngine
         {
             Piece movingPiece = board.Squares[move.FromX, move.FromY];
 
+            // Handle pawn promotion
             if (move.Promotion != PieceType.Empty)
             {
                 board.Squares[move.ToX, move.ToY] = new Piece(move.Promotion, movingPiece.Color);
@@ -513,8 +524,7 @@ namespace ZabkaChessEngine
                 board.EnPassantTarget = null;
             }
 
-            //UpdateB Public Variable
-
+            // Update en passant target public variable
             enPassantTarget = board.EnPassantTarget;
         }
 
