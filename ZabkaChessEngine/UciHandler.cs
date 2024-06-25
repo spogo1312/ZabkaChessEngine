@@ -151,10 +151,15 @@ namespace ZabkaChessEngine
                 board.EnPassantTarget = moveValidator.enPassantTarget;
                 moveValidator.LastMove = userMove;
 
+                
+
+                isWhiteTurn = !isWhiteTurn;  // Switch turn
+                board.IsWhiteTurn = isWhiteTurn;
+
+
                 Console.WriteLine("Current board state:");
                 board.PrintBoard();
 
-                isWhiteTurn = !isWhiteTurn;  // Switch turn
                 return true;
             }
             return false;

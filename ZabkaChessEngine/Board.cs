@@ -164,6 +164,14 @@ namespace ZabkaChessEngine
 
             Console.WriteLine();
             Console.WriteLine("   a b c d e f g h");
+            if (IsWhiteTurn)
+            {
+                Console.WriteLine("white turn");
+            }
+            else 
+            {
+                Console.WriteLine("black turn");
+            }
         }
 
         private char GetPieceSymbol(Piece piece)
