@@ -44,7 +44,7 @@ namespace ZabkaChessEngine
             }
 
             Console.WriteLine($"Total: {totalNodes}");
-            foreach (var moveCount in moveCounts)
+            foreach (var moveCount in moveCounts.OrderBy(mc => mc.Key))
             {
                 Console.WriteLine($"{moveCount.Key} - {moveCount.Value}");
             }
@@ -94,7 +94,6 @@ namespace ZabkaChessEngine
                 _ => ""
             };
         }
-
         private Board CopyBoard(Board board)
         {
             Board newBoard = new Board();
@@ -105,6 +104,12 @@ namespace ZabkaChessEngine
                     newBoard.Squares[row, col] = new Piece(board.Squares[row, col].Type, board.Squares[row, col].Color);
                 }
             }
+            newBoard.WhiteQueenSideCastling = board.WhiteQueenSideCastling;
+            newBoard.WhiteKingSideCastling = board.WhiteKingSideCastling;
+
+            newBoard.BlackQueenSideCastling = board.BlackQueenSideCastling;
+            newBoard.BlackKingSideCastling = board.BlackKingSideCastling;
+
             newBoard.EnPassantTarget = board.EnPassantTarget;
             newBoard.IsWhiteTurn = board.IsWhiteTurn;
             return newBoard;
