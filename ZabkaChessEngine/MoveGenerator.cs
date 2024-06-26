@@ -13,15 +13,17 @@ namespace ZabkaChessEngine
         public int FromY { get; set; }
         public int ToX { get; set; }
         public int ToY { get; set; }
-        public PieceType Promotion { get; set; }  // Added promotion piece type
+        public PieceType Promotion { get; set; }
+        public bool IsCastling { get; set; } // Added castling flag
 
-        public Move(int fromX, int fromY, int toX, int toY, PieceType promotion = PieceType.Empty)
+        public Move(int fromX, int fromY, int toX, int toY, PieceType promotion = PieceType.Empty, bool isCastling = false)
         {
             FromX = fromX;
             FromY = fromY;
             ToX = toX;
             ToY = toY;
             Promotion = promotion;
+            IsCastling = isCastling; // Initialize castling flag
         }
     }
 
@@ -286,6 +288,30 @@ namespace ZabkaChessEngine
                 }
             }
 
+            // Castling moves
+            if (piece.Color == PieceColor.White)
+            {
+                if (board.WhiteKingSideCastling && board.Squares[7, 5].Type == PieceType.Empty && board.Squares[7, 6].Type == PieceType.Empty)
+                {
+                    moves.Add(new Move(fromX, fromY, 7, 6, PieceType.Empty, true));
+                }
+                if (board.WhiteQueenSideCastling && board.Squares[7, 1].Type == PieceType.Empty && board.Squares[7, 2].Type == PieceType.Empty && board.Squares[7, 3].Type == PieceType.Empty)
+                {
+                    moves.Add(new Move(fromX, fromY, 7, 2, PieceType.Empty, true));
+                }
+            }
+            else
+            {
+                if (board.BlackKingSideCastling && board.Squares[0, 5].Type == PieceType.Empty && board.Squares[0, 6].Type == PieceType.Empty)
+                {
+                    moves.Add(new Move(fromX, fromY, 0, 6, PieceType.Empty, true));
+                }
+                if (board.BlackQueenSideCastling && board.Squares[0, 1].Type == PieceType.Empty && board.Squares[0, 2].Type == PieceType.Empty && board.Squares[0, 3].Type == PieceType.Empty)
+                {
+                    moves.Add(new Move(fromX, fromY, 0, 2, PieceType.Empty, true));
+                }
+            }
+
             return moves;
         }
         public bool IsInBounds(int x, int y)
@@ -476,6 +502,42 @@ namespace ZabkaChessEngine
             int xDiff = Math.Abs(move.ToX - move.FromX);
             int yDiff = Math.Abs(move.ToY - move.FromY);
 
+            if (move.IsCastling)
+            {
+                // Check if the squares between the king and rook are empty and not under attack
+                if (piece.Color == PieceColor.White)
+                {
+                    if (move.ToY == 6 && board.WhiteKingSideCastling)
+                    {
+                        return !IsSquareUnderAttack(board, 7, 4, PieceColor.Black) &&
+                               !IsSquareUnderAttack(board, 7, 5, PieceColor.Black) &&
+                               !IsSquareUnderAttack(board, 7, 6, PieceColor.Black);
+                    }
+                    if (move.ToY == 2 && board.WhiteQueenSideCastling)
+                    {
+                        return !IsSquareUnderAttack(board, 7, 4, PieceColor.Black) &&
+                               !IsSquareUnderAttack(board, 7, 3, PieceColor.Black) &&
+                               !IsSquareUnderAttack(board, 7, 2, PieceColor.Black);
+                    }
+                }
+                else
+                {
+                    if (move.ToY == 6 && board.BlackKingSideCastling)
+                    {
+                        return !IsSquareUnderAttack(board, 0, 4, PieceColor.White) &&
+                               !IsSquareUnderAttack(board, 0, 5, PieceColor.White) &&
+                               !IsSquareUnderAttack(board, 0, 6, PieceColor.White);
+                    }
+                    if (move.ToY == 2 && board.BlackQueenSideCastling)
+                    {
+                        return !IsSquareUnderAttack(board, 0, 4, PieceColor.White) &&
+                               !IsSquareUnderAttack(board, 0, 3, PieceColor.White) &&
+                               !IsSquareUnderAttack(board, 0, 2, PieceColor.White);
+                    }
+                }
+                return false;
+            }
+
             if (xDiff <= 1 && yDiff <= 1)
             {
                 if (board.Squares[move.ToX, move.ToY].Color != piece.Color)
@@ -505,7 +567,41 @@ namespace ZabkaChessEngine
         {
             Piece movingPiece = board.Squares[move.FromX, move.FromY];
 
-            // Handle pawn promotion
+            if (move.IsCastling)
+            {
+                if (movingPiece.Color == PieceColor.White)
+                {
+                    if (move.ToY == 6) // White king-side castling
+                    {
+                        board.Squares[7, 5] = new Piece(PieceType.Rook, PieceColor.White);
+                        board.Squares[7, 7] = new Piece(PieceType.Empty, PieceColor.None);
+                    }
+                    else if (move.ToY == 2) // White queen-side castling
+                    {
+                        board.Squares[7, 3] = new Piece(PieceType.Rook, PieceColor.White);
+                        board.Squares[7, 0] = new Piece(PieceType.Empty, PieceColor.None);
+                    }
+                    board.WhiteKingSideCastling = false;
+                    board.WhiteQueenSideCastling = false;
+                }
+                else
+                {
+                    if (move.ToY == 6) // Black king-side castling
+                    {
+                        board.Squares[0, 5] = new Piece(PieceType.Rook, PieceColor.Black);
+                        board.Squares[0, 7] = new Piece(PieceType.Empty, PieceColor.None);
+                    }
+                    else if (move.ToY == 2) // Black queen-side castling
+                    {
+                        board.Squares[0, 3] = new Piece(PieceType.Rook, PieceColor.Black);
+                        board.Squares[0, 0] = new Piece(PieceType.Empty, PieceColor.None);
+                    }
+                    board.BlackKingSideCastling = false;
+                    board.BlackQueenSideCastling = false;
+                }
+            }
+
+            // Move the piece
             if (move.Promotion != PieceType.Empty)
             {
                 board.Squares[move.ToX, move.ToY] = new Piece(move.Promotion, movingPiece.Color);
@@ -514,7 +610,6 @@ namespace ZabkaChessEngine
             {
                 board.Squares[move.ToX, move.ToY] = movingPiece;
             }
-
             board.Squares[move.FromX, move.FromY] = new Piece(PieceType.Empty, PieceColor.None);
 
             // Handle en passant capture
@@ -536,6 +631,46 @@ namespace ZabkaChessEngine
 
             // Update public en passant target variable
             enPassantTarget = board.EnPassantTarget;
+
+            // Reset castling rights if king or rook moves
+            if (movingPiece.Type == PieceType.King)
+            {
+                if (movingPiece.Color == PieceColor.White)
+                {
+                    board.WhiteKingSideCastling = false;
+                    board.WhiteQueenSideCastling = false;
+                }
+                else
+                {
+                    board.BlackKingSideCastling = false;
+                    board.BlackQueenSideCastling = false;
+                }
+            }
+            else if (movingPiece.Type == PieceType.Rook)
+            {
+                if (movingPiece.Color == PieceColor.White)
+                {
+                    if (move.FromX == 7 && move.FromY == 0)
+                    {
+                        board.WhiteQueenSideCastling = false;
+                    }
+                    else if (move.FromX == 7 && move.FromY == 7)
+                    {
+                        board.WhiteKingSideCastling = false;
+                    }
+                }
+                else
+                {
+                    if (move.FromX == 0 && move.FromY == 0)
+                    {
+                        board.BlackQueenSideCastling = false;
+                    }
+                    else if (move.FromX == 0 && move.FromY == 7)
+                    {
+                        board.BlackKingSideCastling = false;
+                    }
+                }
+            }
         }
 
 
@@ -578,6 +713,28 @@ namespace ZabkaChessEngine
                 }
             }
 
+            return false;
+        }
+        private bool IsSquareUnderAttack(Board board, int x, int y, PieceColor attackingColor)
+        {
+            for (int row = 0; row < 8; row++)
+            {
+                for (int col = 0; col < 8; col++)
+                {
+                    Piece piece = board.Squares[row, col];
+                    if (piece.Color == attackingColor)
+                    {
+                        List<Move> opponentMoves = new MoveGenerator().GeneratePieceMoves(board, piece, row, col);
+                        foreach (Move move in opponentMoves)
+                        {
+                            if (move.ToX == x && move.ToY == y)
+                            {
+                                return true;
+                            }
+                        }
+                    }
+                }
+            }
             return false;
         }
 

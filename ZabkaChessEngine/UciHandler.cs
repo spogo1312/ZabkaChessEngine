@@ -134,6 +134,7 @@ namespace ZabkaChessEngine
             int toY = move[2] - 'a';
             int toX = 8 - (move[3] - '0');
             PieceType promotionPiece = PieceType.Empty;
+            bool isCastling = false;
 
             if (move.Length == 5)
             {
@@ -153,8 +154,12 @@ namespace ZabkaChessEngine
                         break;
                 }
             }
+            if (board.Squares[fromX, fromY].Type == PieceType.King && Math.Abs(toY - fromY) == 2)
+            {
+                isCastling = true;
+            }
 
-            Move userMove = new Move(fromX, fromY, toX, toY, promotionPiece);
+            Move userMove = new Move(fromX, fromY, toX, toY, promotionPiece, isCastling);
 
             bool isWhiteMove = board.Squares[fromX, fromY].Color == PieceColor.White;
             if (checkTurn && isWhiteMove != isWhiteTurn)
@@ -164,6 +169,12 @@ namespace ZabkaChessEngine
 
             if (moveValidator.IsMoveLegal(board, userMove, isWhiteTurn))
             {
+                moveValidator.ApplyMove(board, userMove);
+
+                isWhiteTurn = !isWhiteTurn;  // Switch turn
+                board.IsWhiteTurn = isWhiteTurn;
+
+                return true;
                 // Handle en passant capture
                 if (board.Squares[fromX, fromY].Type == PieceType.Pawn && toX == fromX + (isWhiteTurn ? -1 : 1) && toY != fromY && board.Squares[toX, toY].Type == PieceType.Empty)
                 {
@@ -189,6 +200,7 @@ namespace ZabkaChessEngine
 
                 //DEBUG Moves
                 return true;
+
             }
             return false;
         }
@@ -233,15 +245,29 @@ namespace ZabkaChessEngine
                         promotionPiece = ' ';
                         break;
                 }
+
                 string moveString;
                 if (promotionPiece == ' ')
                 {
                     moveString = $"{(char)(move.FromY + 'a')}{8 - move.FromX}{(char)(move.ToY + 'a')}{8 - move.ToX}";
                 }
-                else 
+                else
                 {
                     moveString = $"{(char)(move.FromY + 'a')}{8 - move.FromX}{(char)(move.ToY + 'a')}{8 - move.ToX}{promotionPiece}";
                 }
+
+                if (move.IsCastling)
+                {
+                    if (move.ToY == 6)
+                    {
+                        moveString = isBotWhite ? "e1g1" : "e8g8"; // King-side castling
+                    }
+                    else if (move.ToY == 2)
+                    {
+                        moveString = isBotWhite ? "e1c1" : "e8c8"; // Queen-side castling
+                    }
+                }
+
                 Console.WriteLine($"bestmove {moveString}");
 
                 ApplyMove(moveString, false);
@@ -278,7 +304,48 @@ namespace ZabkaChessEngine
             if (legalMoves.Count > 0)
             {
                 Move move = legalMoves[random.Next(legalMoves.Count)];
-                string moveString = $"{(char)(move.FromY + 'a')}{8 - move.FromX}{(char)(move.ToY + 'a')}{8 - move.ToX}";
+                char promotionPiece;
+                switch (move.Promotion)
+                {
+                    case PieceType.Queen:
+                        promotionPiece = 'q';
+                        break;
+                    case PieceType.Rook:
+                        promotionPiece = 'r';
+                        break;
+                    case PieceType.Bishop:
+                        promotionPiece = 'b';
+                        break;
+                    case PieceType.Knight:
+                        promotionPiece = 'n';
+                        break;
+                    default:
+                        promotionPiece = ' ';
+                        break;
+                }
+
+                string moveString;
+                if (promotionPiece == ' ')
+                {
+                    moveString = $"{(char)(move.FromY + 'a')}{8 - move.FromX}{(char)(move.ToY + 'a')}{8 - move.ToX}";
+                }
+                else
+                {
+                    moveString = $"{(char)(move.FromY + 'a')}{8 - move.FromX}{(char)(move.ToY + 'a')}{8 - move.ToX}{promotionPiece}";
+                }
+
+                if (move.IsCastling)
+                {
+                    if (move.ToY == 6)
+                    {
+                        moveString = isWhiteTurn ? "e1g1" : "e8g8"; // King-side castling
+                    }
+                    else if (move.ToY == 2)
+                    {
+                        moveString = isWhiteTurn ? "e1c1" : "e8c8"; // Queen-side castling
+                    }
+                }
+
                 Console.WriteLine($"bestmove {moveString}");
 
                 ApplyMove(moveString, false);

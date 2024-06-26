@@ -42,6 +42,11 @@ namespace ZabkaChessEngine
         public (int x, int y)? EnPassantTarget { get; set; }
         public bool IsWhiteTurn { get; set; }
 
+        public bool WhiteKingSideCastling { get; set; }
+        public bool WhiteQueenSideCastling { get; set; }
+        public bool BlackKingSideCastling { get; set; }
+        public bool BlackQueenSideCastling { get; set; }
+
 
         public Board()
         {
@@ -49,6 +54,10 @@ namespace ZabkaChessEngine
             EnPassantTarget = null;
             IsWhiteTurn = true;
             InitializeBoard();
+            WhiteKingSideCastling = true;
+            WhiteQueenSideCastling = true;
+            BlackKingSideCastling = true;
+            BlackQueenSideCastling = true;
 
         }
 
