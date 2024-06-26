@@ -174,32 +174,34 @@ namespace ZabkaChessEngine
                 isWhiteTurn = !isWhiteTurn;  // Switch turn
                 board.IsWhiteTurn = isWhiteTurn;
 
-                return true;
-                // Handle en passant capture
-                if (board.Squares[fromX, fromY].Type == PieceType.Pawn && toX == fromX + (isWhiteTurn ? -1 : 1) && toY != fromY && board.Squares[toX, toY].Type == PieceType.Empty)
-                {
-                    board.Squares[fromX, toY] = new Piece(PieceType.Empty, PieceColor.None);
-                }
-
-                board.Squares[toX, toY] = board.Squares[fromX, fromY];
-                if (userMove.Promotion != PieceType.Empty) 
-                {
-                    board.Squares[toX, toY].Type = userMove.Promotion;
-                }
-                board.Squares[fromX, fromY] = new Piece(PieceType.Empty, PieceColor.None);
-                board.EnPassantTarget = moveValidator.enPassantTarget;
-                moveValidator.LastMove = userMove;
-
-                isWhiteTurn = !isWhiteTurn;  // Switch turn
-                board.IsWhiteTurn = isWhiteTurn;
-
                 //DEBUG Moves
 
                 //Console.WriteLine("Current board state:");
                 //board.PrintBoard();
 
                 //DEBUG Moves
+
                 return true;
+                //// Handle en passant capture
+                //if (board.Squares[fromX, fromY].Type == PieceType.Pawn && toX == fromX + (isWhiteTurn ? -1 : 1) && toY != fromY && board.Squares[toX, toY].Type == PieceType.Empty)
+                //{
+                //    board.Squares[fromX, toY] = new Piece(PieceType.Empty, PieceColor.None);
+                //}
+
+                //board.Squares[toX, toY] = board.Squares[fromX, fromY];
+                //if (userMove.Promotion != PieceType.Empty) 
+                //{
+                //    board.Squares[toX, toY].Type = userMove.Promotion;
+                //}
+                //board.Squares[fromX, fromY] = new Piece(PieceType.Empty, PieceColor.None);
+                //board.EnPassantTarget = moveValidator.enPassantTarget;
+                //moveValidator.LastMove = userMove;
+
+                //isWhiteTurn = !isWhiteTurn;  // Switch turn
+                //board.IsWhiteTurn = isWhiteTurn;
+
+                
+                //return true;
 
             }
             return false;

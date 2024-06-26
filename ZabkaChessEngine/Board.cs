@@ -143,6 +143,14 @@ namespace ZabkaChessEngine
             }
             // Parse side to move
             IsWhiteTurn = parts[1] == "w";
+
+            // Parse castling availability
+            string castlingRights = parts[2];
+            WhiteKingSideCastling = castlingRights.Contains('K');
+            WhiteQueenSideCastling = castlingRights.Contains('Q');
+            BlackKingSideCastling = castlingRights.Contains('k');
+            BlackQueenSideCastling = castlingRights.Contains('q');
+
             // Parse en passant target square
             if (parts[3] != "-")
             {
