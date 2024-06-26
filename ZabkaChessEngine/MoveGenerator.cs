@@ -601,22 +601,12 @@ namespace ZabkaChessEngine
                 }
             }
 
-            // Move the piece
-            if (move.Promotion != PieceType.Empty)
-            {
-                board.Squares[move.ToX, move.ToY] = new Piece(move.Promotion, movingPiece.Color);
-            }
-            else
-            {
-                board.Squares[move.ToX, move.ToY] = movingPiece;
-            }
-            board.Squares[move.FromX, move.FromY] = new Piece(PieceType.Empty, PieceColor.None);
-
             // Handle en passant capture
             if (movingPiece.Type == PieceType.Pawn && move.ToY != move.FromY && board.Squares[move.ToX, move.ToY].Type == PieceType.Empty)
             {
                 int direction = movingPiece.Color == PieceColor.White ? 1 : -1;
                 board.Squares[move.ToX - direction, move.ToY] = new Piece(PieceType.Empty, PieceColor.None);
+                board.Squares[move.FromX, move.ToY] = new Piece(PieceType.Empty, PieceColor.None);
             }
 
             // Update en passant target
@@ -631,6 +621,19 @@ namespace ZabkaChessEngine
 
             // Update public en passant target variable
             enPassantTarget = board.EnPassantTarget;
+
+            // Move the piece
+            if (move.Promotion != PieceType.Empty)
+            {
+                board.Squares[move.ToX, move.ToY] = new Piece(move.Promotion, movingPiece.Color);
+            }
+            else
+            {
+                board.Squares[move.ToX, move.ToY] = movingPiece;
+            }
+            board.Squares[move.FromX, move.FromY] = new Piece(PieceType.Empty, PieceColor.None);
+
+            
 
             // Reset castling rights if king or rook moves
             if (movingPiece.Type == PieceType.King)
