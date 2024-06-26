@@ -155,6 +155,8 @@ namespace ZabkaChessEngine
                 }
             }
 
+
+
             return moves;
         }
 
@@ -338,9 +340,10 @@ namespace ZabkaChessEngine
         {
             int direction = piece.Color == PieceColor.White ? -1 : 1;
             int startRow = piece.Color == PieceColor.White ? 6 : 1;
+            int promotionRow = piece.Color == PieceColor.White ? 0 : 7;
 
             // Single move forward
-            if (move.ToX == move.FromX + direction && move.ToY == move.FromY && board.Squares[move.ToX, move.ToY].Type == PieceType.Empty)
+            if (move.ToX == move.FromX + direction && move.ToY == move.FromY && board.Squares[move.ToX, move.ToY].Type == PieceType.Empty && move.ToX != promotionRow)
             {
                 return true;
             }
@@ -373,7 +376,14 @@ namespace ZabkaChessEngine
                         return true;
                     }
                 }
+                
             }
+            // Promotion move
+            if (move.ToX == promotionRow && move.Promotion != PieceType.Empty)
+            {
+                return true;
+            }
+
 
             return false;
         }
@@ -527,6 +537,7 @@ namespace ZabkaChessEngine
             // Update public en passant target variable
             enPassantTarget = board.EnPassantTarget;
         }
+
 
         private bool IsKingInCheck(Board board, bool isWhiteTurn)
         {

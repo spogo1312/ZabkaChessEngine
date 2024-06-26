@@ -133,8 +133,28 @@ namespace ZabkaChessEngine
             int fromX = 8 - (move[1] - '0');
             int toY = move[2] - 'a';
             int toX = 8 - (move[3] - '0');
+            PieceType promotionPiece = PieceType.Empty;
 
-            Move userMove = new Move(fromX, fromY, toX, toY);
+            if (move.Length == 5)
+            {
+                switch (move[4])
+                {
+                    case 'q':
+                        promotionPiece = PieceType.Queen;
+                        break;
+                    case 'r':
+                        promotionPiece = PieceType.Rook;
+                        break;
+                    case 'b':
+                        promotionPiece = PieceType.Bishop;
+                        break;
+                    case 'n':
+                        promotionPiece = PieceType.Knight;
+                        break;
+                }
+            }
+
+            Move userMove = new Move(fromX, fromY, toX, toY, promotionPiece);
 
             bool isWhiteMove = board.Squares[fromX, fromY].Color == PieceColor.White;
             if (checkTurn && isWhiteMove != isWhiteTurn)
@@ -151,19 +171,23 @@ namespace ZabkaChessEngine
                 }
 
                 board.Squares[toX, toY] = board.Squares[fromX, fromY];
+                if (userMove.Promotion != PieceType.Empty) 
+                {
+                    board.Squares[toX, toY].Type = userMove.Promotion;
+                }
                 board.Squares[fromX, fromY] = new Piece(PieceType.Empty, PieceColor.None);
                 board.EnPassantTarget = moveValidator.enPassantTarget;
                 moveValidator.LastMove = userMove;
 
-                
-
                 isWhiteTurn = !isWhiteTurn;  // Switch turn
                 board.IsWhiteTurn = isWhiteTurn;
 
+                //DEBUG Moves
 
-                Console.WriteLine("Current board state:");
-                board.PrintBoard();
+                //Console.WriteLine("Current board state:");
+                //board.PrintBoard();
 
+                //DEBUG Moves
                 return true;
             }
             return false;
@@ -190,7 +214,34 @@ namespace ZabkaChessEngine
             if (legalMoves.Count > 0)
             {
                 Move move = legalMoves[random.Next(legalMoves.Count)];
-                string moveString = $"{(char)(move.FromY + 'a')}{8 - move.FromX}{(char)(move.ToY + 'a')}{8 - move.ToX}";
+                char promotionPiece;
+                switch (move.Promotion)
+                {
+                    case PieceType.Queen:
+                        promotionPiece = 'q';
+                        break;
+                    case PieceType.Rook:
+                        promotionPiece = 'r';
+                        break;
+                    case PieceType.Bishop:
+                        promotionPiece = 'b';
+                        break;
+                    case PieceType.Knight:
+                        promotionPiece = 'n';
+                        break;
+                    default:
+                        promotionPiece = ' ';
+                        break;
+                }
+                string moveString;
+                if (promotionPiece == ' ')
+                {
+                    moveString = $"{(char)(move.FromY + 'a')}{8 - move.FromX}{(char)(move.ToY + 'a')}{8 - move.ToX}";
+                }
+                else 
+                {
+                    moveString = $"{(char)(move.FromY + 'a')}{8 - move.FromX}{(char)(move.ToY + 'a')}{8 - move.ToX}{promotionPiece}";
+                }
                 Console.WriteLine($"bestmove {moveString}");
 
                 ApplyMove(moveString, false);
