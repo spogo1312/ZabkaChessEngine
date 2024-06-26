@@ -14,7 +14,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("ZabkaChessEngine")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+3a60d9713a0197074134895c533bebff99bc908d")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+6fee9f530185be7bd313fe9a266e9c3b65b789f2")]
 [assembly: System.Reflection.AssemblyProductAttribute("ZabkaChessEngine")]
 [assembly: System.Reflection.AssemblyTitleAttribute("ZabkaChessEngine")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

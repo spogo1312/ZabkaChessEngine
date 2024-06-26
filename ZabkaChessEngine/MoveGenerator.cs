@@ -79,7 +79,7 @@ namespace ZabkaChessEngine
             return moves;
         }
 
-        private List<Move> GeneratePawnMoves(Board board, Piece piece, int fromX, int fromY)
+        public List<Move> GeneratePawnMoves(Board board, Piece piece, int fromX, int fromY)
         {
             List<Move> moves = new List<Move>();
             int direction = piece.Color == PieceColor.White ? -1 : 1;
@@ -524,7 +524,7 @@ namespace ZabkaChessEngine
                 board.EnPassantTarget = null;
             }
 
-            // Update en passant target public variable
+            // Update public en passant target variable
             enPassantTarget = board.EnPassantTarget;
         }
 
@@ -569,6 +569,7 @@ namespace ZabkaChessEngine
 
             return false;
         }
+
     }
 
 

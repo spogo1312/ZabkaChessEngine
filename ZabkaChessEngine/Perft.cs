@@ -109,6 +109,32 @@ namespace ZabkaChessEngine
             newBoard.IsWhiteTurn = board.IsWhiteTurn;
             return newBoard;
         }
+        public void ValidateIntermediateState()
+        {
+            // Initial board setup from FEN
+            Board board = new Board();
+            board.SetPositionFromFEN("8/8/K2p4/1Pp4r/1R3p1k/8/4P1P1/8 w - c6 0 2");
+
+            // Perform perft 2 to see initial counts
+            PerformPerft(board, 2);
+            DisplayBoard(board);
+
+            // Manually apply the move b5c6
+            Move move = new Move(3, 1, 2, 2);
+            moveValidator.ApplyMove(board, move);
+            DisplayBoard(board);
+
+            // Perform perft 1 to see counts after the move
+            PerformPerft(board, 1);
+
+            // Check the intermediate state
+            DisplayBoard(board);
+        }
+
+        public void DisplayBoard(Board board)
+        {
+            board.PrintBoard();
+        }
     }
 
 }

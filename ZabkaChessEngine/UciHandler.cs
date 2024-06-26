@@ -120,6 +120,10 @@ namespace ZabkaChessEngine
                         Console.WriteLine("Invalid perft command. Usage: perft <depth>");
                     }
                 }
+                else if (input == "validate")
+                {
+                    perft.ValidateIntermediateState();
+                }
             }
         }
 
