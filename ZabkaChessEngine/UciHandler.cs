@@ -14,16 +14,18 @@ namespace ZabkaChessEngine
         private bool isBotWhite;
         private bool isWhiteTurn;
         private bool manualPlayMode;
+        private bool botColorDetermined;
 
-        public UciHandler(bool isBotWhite)
+        public UciHandler()
         {
             board = new Board();
             moveGenerator = new MoveGenerator();
             moveValidator = new MoveValidator();
             perft = new Perft();
-            this.isBotWhite = isBotWhite;
-            this.isWhiteTurn = true;  // White always starts in chess
-            this.manualPlayMode = false;
+            isBotWhite = false; // Default to black, will set correctly upon position setup
+            isWhiteTurn = true;  // White always starts in chess
+            manualPlayMode = false;
+            botColorDetermined = false;
         }
 
         public void Start()
@@ -31,6 +33,7 @@ namespace ZabkaChessEngine
             while (true)
             {
                 string input = Console.ReadLine();
+                Console.WriteLine($"Received input: {input}");
                 if (input == "uci")
                 {
                     Console.WriteLine("id name Zabka");
@@ -45,34 +48,24 @@ namespace ZabkaChessEngine
                 {
                     board = new Board();
                     isWhiteTurn = true;
+                    botColorDetermined = false;
+                    Console.WriteLine("New game started. White to move first.");
                 }
                 else if (input.StartsWith("position"))
                 {
-                    if (input.Contains("startpos"))
-                    {
-                        board = new Board();
-                        isWhiteTurn = true;  // Reset to white's turn
-                    }
-                    else if (input.Contains("fen"))
-                    {
-                        string fen = input.Substring(input.IndexOf("fen") + 4);
-                        board.SetPositionFromFEN(fen);
-                        // Reset the turn based on the FEN string
-                        isWhiteTurn = fen.Contains(" w ");
-                    }
-                    // Apply moves from position command
-                    if (input.Contains("moves"))
-                    {
-                        string[] parts = input.Split(' ');
-                        for (int i = 3; i < parts.Length; i++)
-                        {
-                            ApplyMove(parts[i], false);
-                        }
-                    }
+                    HandlePositionCommand(input);
                 }
                 else if (input.StartsWith("go"))
                 {
-                    MakeBotMove();
+                    if (!botColorDetermined)
+                    {
+                        DetermineBotColor();
+                    }
+                    Console.WriteLine($"Bot turn to move: {isBotWhite == isWhiteTurn}");
+                    if (isBotWhite == isWhiteTurn)
+                    {
+                        MakeBotMove();
+                    }
                 }
                 else if (input == "quit")
                 {
@@ -103,10 +96,26 @@ namespace ZabkaChessEngine
                         Console.WriteLine("Illegal move. Try again.");
                     }
                 }
+                else if (input.StartsWith("bestmove"))
+                {
+                    string move = input.Substring(5);
+                    if (ApplyMove(move, !manualPlayMode))
+                    {
+                        if (IsBotTurn() && !manualPlayMode)
+                        {
+                            MakeBotMove();
+                        }
+                    }
+                    else
+                    {
+                        Console.WriteLine("Illegal move. Try again.");
+                    }
+                }
                 else if (input == "display")
                 {
                     Console.WriteLine("Current board state:");
                     board.PrintBoard();
+                    Console.WriteLine($"{(isWhiteTurn ? "white" : "black")} turn");
                 }
                 else if (input.StartsWith("perft"))
                 {
@@ -123,6 +132,41 @@ namespace ZabkaChessEngine
                 else if (input == "validate")
                 {
                     perft.ValidateIntermediateState();
+                }
+            }
+        }
+
+        private void DetermineBotColor()
+        {
+            if (!botColorDetermined)
+            {
+                isBotWhite = isWhiteTurn;
+                botColorDetermined = true;
+                Console.WriteLine($"Bot color determined: {(isBotWhite ? "White" : "Black")}");
+            }
+        }
+
+        private void HandlePositionCommand(string input)
+        {
+            if (input.Contains("startpos"))
+            {
+                board = new Board();
+                isWhiteTurn = true;  // Reset to white's turn
+            }
+            else if (input.Contains("fen"))
+            {
+                string fen = input.Substring(input.IndexOf("fen") + 4);
+                board.SetPositionFromFEN(fen);
+                // Reset the turn based on the FEN string
+                isWhiteTurn = fen.Contains(" w ");
+            }
+            // Apply moves from position command
+            if (input.Contains("moves"))
+            {
+                string[] parts = input.Split(' ');
+                for (int i = 3; i < parts.Length; i++)
+                {
+                    ApplyMove(parts[i], false);
                 }
             }
         }
