@@ -19,9 +19,9 @@ namespace ZabkaChessEngine
 
     public enum PieceColor
     {
-        None,
-        White,
-        Black
+        None = 0,
+        White = 1,
+        Black = -1
     }
 
     public class Piece

@@ -36,7 +36,7 @@ namespace ZabkaChessEngine
                 Console.WriteLine($"Received input: {input}");
                 if (input == "uci")
                 {
-                    Console.WriteLine("id name Zabka");
+                    Console.WriteLine("id name Zabka v0.0.2");
                     Console.WriteLine("id author JakPod");
                     Console.WriteLine("uciok");
                 }
@@ -260,70 +260,46 @@ namespace ZabkaChessEngine
 
         private void MakeBotMove()
         {
-            List<Move> allMoves = moveGenerator.GenerateAllMoves(board, isBotWhite);
-            List<Move> legalMoves = new List<Move>();
+            ChessEngine engine = new ChessEngine();
+            Move bestMove = engine.SelectBestMove(board);
 
-            foreach (Move move in allMoves)
+            if (bestMove != null)
             {
-                if (moveValidator.IsMoveLegal(board, move, isBotWhite))
-                {
-                    legalMoves.Add(move);
-                }
-            }
-
-            if (legalMoves.Count > 0)
-            {
-                Move move = legalMoves[random.Next(legalMoves.Count)];
-                char promotionPiece;
-                switch (move.Promotion)
-                {
-                    case PieceType.Queen:
-                        promotionPiece = 'q';
-                        break;
-                    case PieceType.Rook:
-                        promotionPiece = 'r';
-                        break;
-                    case PieceType.Bishop:
-                        promotionPiece = 'b';
-                        break;
-                    case PieceType.Knight:
-                        promotionPiece = 'n';
-                        break;
-                    default:
-                        promotionPiece = ' ';
-                        break;
-                }
-
-                string moveString;
-                if (promotionPiece == ' ')
-                {
-                    moveString = $"{(char)(move.FromY + 'a')}{8 - move.FromX}{(char)(move.ToY + 'a')}{8 - move.ToX}";
-                }
-                else
-                {
-                    moveString = $"{(char)(move.FromY + 'a')}{8 - move.FromX}{(char)(move.ToY + 'a')}{8 - move.ToX}{promotionPiece}";
-                }
-
-                if (move.IsCastling)
-                {
-                    if (move.ToY == 6)
-                    {
-                        moveString = isBotWhite ? "e1g1" : "e8g8"; // King-side castling
-                    }
-                    else if (move.ToY == 2)
-                    {
-                        moveString = isBotWhite ? "e1c1" : "e8c8"; // Queen-side castling
-                    }
-                }
-
+                string moveString = MoveToString(bestMove);
                 Console.WriteLine($"bestmove {moveString}");
-
                 ApplyMove(moveString, false);
             }
             else
             {
                 Console.WriteLine("bestmove (none)");
             }
+        }
+        private string MoveToString(Move move)
+        {
+            char promotionPiece = ' ';
+            switch (move.Promotion)
+            {
+                case PieceType.Queen:
+                    promotionPiece = 'q';
+                    break;
+                case PieceType.Rook:
+                    promotionPiece = 'r';
+                    break;
+                case PieceType.Bishop:
+                    promotionPiece = 'b';
+                    break;
+                case PieceType.Knight:
+                    promotionPiece = 'n';
+                    break;
+            }
+
+            string moveString = $"{(char)(move.FromY + 'a')}{8 - move.FromX}{(char)(move.ToY + 'a')}{8 - move.ToX}";
+            if (promotionPiece != ' ')
+            {
+                moveString += promotionPiece;
+            }
+
+            return moveString;
         }
         private void PlayBotVsBot()
         {
