@@ -314,6 +314,23 @@ namespace ZabkaChessEngine
 
             return moves;
         }
+        public List<Move> GeneratePawnAttacks(Board board, Piece piece, int fromX, int fromY)
+        {
+            List<Move> attacks = new List<Move>();
+            int direction = piece.Color == PieceColor.White ? -1 : 1;
+
+            // Check diagonal attacks
+            if (IsInBounds(fromX + direction, fromY - 1))
+            {
+                attacks.Add(new Move(fromX, fromY, fromX + direction, fromY - 1));
+            }
+            if (IsInBounds(fromX + direction, fromY + 1))
+            {
+                attacks.Add(new Move(fromX, fromY, fromX + direction, fromY + 1));
+            }
+
+            return attacks;
+        }
         public bool IsInBounds(int x, int y)
         {
             return x >= 0 && x < 8 && y >= 0 && y < 8;
@@ -675,7 +692,7 @@ namespace ZabkaChessEngine
                 }
             }
         }
-
+        
 
         private bool IsKingInCheck(Board board, bool isWhiteTurn)
         {
@@ -727,7 +744,16 @@ namespace ZabkaChessEngine
                     Piece piece = board.Squares[row, col];
                     if (piece.Color == attackingColor)
                     {
-                        List<Move> opponentMoves = new MoveGenerator().GeneratePieceMoves(board, piece, row, col);
+                        List<Move> opponentMoves;
+                        if (piece.Type == PieceType.Pawn)
+                        {
+                            opponentMoves = new MoveGenerator().GeneratePawnAttacks(board, piece, row, col);
+                        }
+                        else
+                        {
+                            opponentMoves = new MoveGenerator().GeneratePieceMoves(board, piece, row, col);
+                        }
+
                         foreach (Move move in opponentMoves)
                         {
                             if (move.ToX == x && move.ToY == y)
