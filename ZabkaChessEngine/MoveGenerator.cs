@@ -524,7 +524,7 @@ namespace ZabkaChessEngine
                 // Check if the squares between the king and rook are empty and not under attack
                 if (piece.Color == PieceColor.White)
                 {
-                    if (move.ToY == 6 && board.WhiteKingSideCastling)
+                    if (move.ToY == 6 && board.WhiteKingSideCastling && board.Squares[7,7].Type == PieceType.Rook && board.Squares[7, 7].Color == PieceColor.White)
                     {
                         return !IsSquareUnderAttack(board, 7, 4, PieceColor.Black) &&
                                !IsSquareUnderAttack(board, 7, 5, PieceColor.Black) &&
@@ -650,7 +650,7 @@ namespace ZabkaChessEngine
             }
             board.Squares[move.FromX, move.FromY] = new Piece(PieceType.Empty, PieceColor.None);
 
-            
+
 
             // Reset castling rights if king or rook moves
             if (movingPiece.Type == PieceType.King)
@@ -666,33 +666,27 @@ namespace ZabkaChessEngine
                     board.BlackQueenSideCastling = false;
                 }
             }
-            else if (movingPiece.Type == PieceType.Rook)
+
+            //White Castling Rights
+            else if ((move.FromX == 7 && move.FromY == 0) || (move.ToX == 7 && move.ToY == 0))
             {
-                if (movingPiece.Color == PieceColor.White)
-                {
-                    if (move.FromX == 7 && move.FromY == 0)
-                    {
-                        board.WhiteQueenSideCastling = false;
-                    }
-                    else if (move.FromX == 7 && move.FromY == 7)
-                    {
-                        board.WhiteKingSideCastling = false;
-                    }
-                }
-                else
-                {
-                    if (move.FromX == 0 && move.FromY == 0)
-                    {
-                        board.BlackQueenSideCastling = false;
-                    }
-                    else if (move.FromX == 0 && move.FromY == 7)
-                    {
-                        board.BlackKingSideCastling = false;
-                    }
-                }
+                board.WhiteQueenSideCastling = false;
+            }
+            else if ((move.FromX == 7 && move.FromY == 7) || (move.ToX == 7 && move.ToY == 7))
+            {
+                board.WhiteKingSideCastling = false;
+            }
+            //Black Castling Rights
+            else if ((move.FromX == 0 && move.FromY == 0) || (move.ToX == 0 && move.ToY == 0))
+            {
+                board.BlackQueenSideCastling = false;
+            }
+            else if ((move.FromX == 0 && move.FromY == 7) || (move.ToX == 0 && move.ToY == 7))
+            {
+                board.BlackKingSideCastling = false;
             }
         }
-        
+
 
         private bool IsKingInCheck(Board board, bool isWhiteTurn)
         {
