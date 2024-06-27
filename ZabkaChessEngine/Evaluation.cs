@@ -9,7 +9,7 @@ namespace ZabkaChessEngine
     public class Evaluation
     {
         private static readonly int[] PieceValues = {
-            0, 100, 300, 300, 500, 900, 0 // Empty, Pawn, Knight, Bishop, Rook, Queen, King
+            0, 100, 300, 300, 500, 900, 10000 // Empty, Pawn, Knight, Bishop, Rook, Queen, King
         };
 
        

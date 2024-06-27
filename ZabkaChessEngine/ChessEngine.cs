@@ -19,18 +19,23 @@ namespace ZabkaChessEngine
             MoveGenerator moveGenerator = new MoveGenerator();
             List<Move> allMoves = moveGenerator.GenerateAllMoves(board, board.IsWhiteTurn);
 
+
             foreach (Move move in allMoves)
             {
-                Board boardCopy = CopyBoard(board);
-                moveValidator.ApplyMove(boardCopy, move);
-
-                int score = Minimax(boardCopy, 2, int.MinValue, int.MaxValue, !board.IsWhiteTurn);
-
-                if ((board.IsWhiteTurn && score > bestScore) || (!board.IsWhiteTurn && score < bestScore))
+                if (moveValidator.IsMoveLegal(board, move, board.IsWhiteTurn)) 
                 {
-                    bestScore = score;
-                    bestMove = move;
+                    Board boardCopy = CopyBoard(board);
+                    moveValidator.ApplyMove(boardCopy, move);
+
+                    int score = Minimax(boardCopy, 2, int.MinValue, int.MaxValue, !board.IsWhiteTurn);
+
+                    if ((board.IsWhiteTurn && score > bestScore) || (!board.IsWhiteTurn && score < bestScore))
+                    {
+                        bestScore = score;
+                        bestMove = move;
+                    }
                 }
+               
             }
             return bestMove;
         }
