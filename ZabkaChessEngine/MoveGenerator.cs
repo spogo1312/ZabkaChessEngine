@@ -668,20 +668,20 @@ namespace ZabkaChessEngine
             }
 
             //White Castling Rights
-            else if ((move.FromX == 7 && move.FromY == 0) || (move.ToX == 7 && move.ToY == 0))
+            if ((move.FromX == 7 && move.FromY == 0) || (move.ToX == 7 && move.ToY == 0))
             {
                 board.WhiteQueenSideCastling = false;
             }
-            else if ((move.FromX == 7 && move.FromY == 7) || (move.ToX == 7 && move.ToY == 7))
+            if ((move.FromX == 7 && move.FromY == 7) || (move.ToX == 7 && move.ToY == 7))
             {
                 board.WhiteKingSideCastling = false;
             }
             //Black Castling Rights
-            else if ((move.FromX == 0 && move.FromY == 0) || (move.ToX == 0 && move.ToY == 0))
+            if ((move.FromX == 0 && move.FromY == 0) || (move.ToX == 0 && move.ToY == 0))
             {
                 board.BlackQueenSideCastling = false;
             }
-            else if ((move.FromX == 0 && move.FromY == 7) || (move.ToX == 0 && move.ToY == 7))
+            if ((move.FromX == 0 && move.FromY == 7) || (move.ToX == 0 && move.ToY == 7))
             {
                 board.BlackKingSideCastling = false;
             }
