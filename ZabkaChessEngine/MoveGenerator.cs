@@ -249,44 +249,36 @@ namespace ZabkaChessEngine
 
     public class MoveValidator
     {
+        private MoveGenerator moveGenerator = new MoveGenerator();
         public Move LastMove { get; set; }
         public (int x, int y)? enPassantTarget;
+
         public bool IsMoveLegal(Board board, Move move, bool isWhiteTurn)
         {
-            // Ensure the move follows the movement rules of the piece
             if (!IsPieceMoveValid(board, move, board.EnPassantTarget))
             {
                 return false;
             }
 
-            // Copy the board and apply the move
             Board boardCopy = CopyBoard(board);
             ApplyMove(boardCopy, move);
 
-            // Check if the king is in check after the move
             return !IsKingInCheck(boardCopy, isWhiteTurn);
-        }   
+        }
 
         private bool IsPieceMoveValid(Board board, Move move, (int x, int y)? enPassantTarget)
         {
-            Piece piece = board.Squares[move.FromX, move.FromY];        
-            switch (piece.Type)
+            Piece piece = board.Squares[move.FromX, move.FromY];
+            return piece.Type switch
             {
-                case PieceType.Pawn:
-                    return IsValidPawnMove(board, move, piece, enPassantTarget);
-                case PieceType.Rook:
-                    return IsValidRookMove(board, move, piece);
-                case PieceType.Knight:
-                    return IsValidKnightMove(board, move, piece);
-                case PieceType.Bishop:
-                    return IsValidBishopMove(board, move, piece);
-                case PieceType.Queen:
-                    return IsValidQueenMove(board, move, piece);
-                case PieceType.King:
-                    return IsValidKingMove(board, move, piece);
-                default:
-                    return false;
-            }
+                PieceType.Pawn => IsValidPawnMove(board, move, piece, enPassantTarget),
+                PieceType.Rook => IsValidRookMove(board, move, piece),
+                PieceType.Knight => IsValidKnightMove(board, move, piece),
+                PieceType.Bishop => IsValidBishopMove(board, move, piece),
+                PieceType.Queen => IsValidQueenMove(board, move, piece),
+                PieceType.King => IsValidKingMove(board, move, piece),
+                _ => false,
+            };
         }
 
         private bool IsValidPawnMove(Board board, Move move, Piece piece, (int x, int y)? enPassantTarget)
@@ -295,50 +287,34 @@ namespace ZabkaChessEngine
             int startRow = piece.Color == PieceColor.White ? 6 : 1;
             int promotionRow = piece.Color == PieceColor.White ? 0 : 7;
 
-            // Single move forward
-            if (move.ToX == move.FromX + direction && move.ToY == move.FromY && board.Squares[move.ToX, move.ToY].Type == PieceType.Empty && move.ToX != promotionRow)
+            if (move.ToX == move.FromX + direction && move.ToY == move.FromY && board.Squares[move.ToX, move.ToY].Type == PieceType.Empty)
             {
-                return true;
+                return move.ToX != promotionRow || move.Promotion != PieceType.Empty;
             }
 
-            // Double move forward from start position
             if (move.FromX == startRow && move.ToX == move.FromX + 2 * direction && move.ToY == move.FromY && board.Squares[move.ToX, move.ToY].Type == PieceType.Empty && board.Squares[move.FromX + direction, move.FromY].Type == PieceType.Empty)
             {
                 return true;
             }
 
-            // Capturing move
             if (move.ToX == move.FromX + direction && Math.Abs(move.ToY - move.FromY) == 1)
-            {   
+            {
                 if (board.Squares[move.ToX, move.ToY].Color != piece.Color && board.Squares[move.ToX, move.ToY].Type != PieceType.Empty)
                 {
                     return true;
                 }
-                // En passant
+
                 if (enPassantTarget.HasValue && enPassantTarget.Value.x == move.ToX && enPassantTarget.Value.y == move.ToY)
                 {
-                    // Temporarily apply the en passant move and check for king safety
                     Board boardCopy = CopyBoard(board);
                     ApplyMove(boardCopy, move);
-
-                    // Remove the pawn captured en passant
                     boardCopy.Squares[move.FromX, move.ToY] = new Piece(PieceType.Empty, PieceColor.None);
 
-                    if (!IsKingInCheck(boardCopy, piece.Color == PieceColor.White))
-                    {
-                        return true;
-                    }
+                    return !IsKingInCheck(boardCopy, piece.Color == PieceColor.White);
                 }
-                
-            }
-            // Promotion move
-            if (move.ToX == promotionRow && move.Promotion != PieceType.Empty)
-            {
-                return true;
             }
 
-
-            return false;
+            return move.ToX == promotionRow && move.Promotion != PieceType.Empty;
         }
 
         private bool IsValidRookMove(Board board, Move move, Piece piece)
@@ -351,25 +327,15 @@ namespace ZabkaChessEngine
             int xDirection = move.ToX > move.FromX ? 1 : (move.ToX < move.FromX ? -1 : 0);
             int yDirection = move.ToY > move.FromY ? 1 : (move.ToY < move.FromY ? -1 : 0);
 
-            int x = move.FromX + xDirection;
-            int y = move.FromY + yDirection;
-
-            while (x != move.ToX || y != move.ToY)
+            for (int x = move.FromX + xDirection, y = move.FromY + yDirection; x != move.ToX || y != move.ToY; x += xDirection, y += yDirection)
             {
                 if (board.Squares[x, y].Type != PieceType.Empty)
                 {
                     return false;
                 }
-                x += xDirection;
-                y += yDirection;
             }
 
-            if (board.Squares[move.ToX, move.ToY].Color == piece.Color)
-            {
-                return false;
-            }
-
-            return true;
+            return board.Squares[move.ToX, move.ToY].Color != piece.Color;
         }
 
         private bool IsValidKnightMove(Board board, Move move, Piece piece)
@@ -377,15 +343,7 @@ namespace ZabkaChessEngine
             int xDiff = Math.Abs(move.ToX - move.FromX);
             int yDiff = Math.Abs(move.ToY - move.FromY);
 
-            if ((xDiff == 2 && yDiff == 1) || (xDiff == 1 && yDiff == 2))
-            {
-                if (board.Squares[move.ToX, move.ToY].Color != piece.Color)
-                {
-                    return true;
-                }
-            }
-
-            return false;
+            return (xDiff == 2 && yDiff == 1) || (xDiff == 1 && yDiff == 2) && board.Squares[move.ToX, move.ToY].Color != piece.Color;
         }
 
         private bool IsValidBishopMove(Board board, Move move, Piece piece)
@@ -398,25 +356,15 @@ namespace ZabkaChessEngine
             int xDirection = move.ToX > move.FromX ? 1 : -1;
             int yDirection = move.ToY > move.FromY ? 1 : -1;
 
-            int x = move.FromX + xDirection;
-            int y = move.FromY + yDirection;
-
-            while (x != move.ToX || y != move.ToY)
+            for (int x = move.FromX + xDirection, y = move.FromY + yDirection; x != move.ToX || y != move.ToY; x += xDirection, y += yDirection)
             {
                 if (board.Squares[x, y].Type != PieceType.Empty)
                 {
                     return false;
                 }
-                x += xDirection;
-                y += yDirection;
             }
 
-            if (board.Squares[move.ToX, move.ToY].Color == piece.Color)
-            {
-                return false;
-            }
-
-            return true;
+            return board.Squares[move.ToX, move.ToY].Color != piece.Color;
         }
 
         private bool IsValidQueenMove(Board board, Move move, Piece piece)
@@ -431,43 +379,50 @@ namespace ZabkaChessEngine
 
             if (move.IsCastling)
             {
-                // Check if the squares between the king and rook are empty and not under attack
-                if (piece.Color == PieceColor.White)
-                {
-                    if (move.ToY == 6 && board.WhiteKingSideCastling && board.Squares[7,7].Type == PieceType.Rook && board.Squares[7, 7].Color == PieceColor.White)
-                    {
-                        return !IsSquareUnderAttack(board, 7, 4, PieceColor.Black) &&
-                               !IsSquareUnderAttack(board, 7, 5, PieceColor.Black) &&
-                               !IsSquareUnderAttack(board, 7, 6, PieceColor.Black);
-                    }
-                    if (move.ToY == 2 && board.WhiteQueenSideCastling)
-                    {
-                        return !IsSquareUnderAttack(board, 7, 4, PieceColor.Black) &&
-                               !IsSquareUnderAttack(board, 7, 3, PieceColor.Black) &&
-                               !IsSquareUnderAttack(board, 7, 2, PieceColor.Black);
-                    }
-                }
-                else
-                {
-                    if (move.ToY == 6 && board.BlackKingSideCastling)
-                    {
-                        return !IsSquareUnderAttack(board, 0, 4, PieceColor.White) &&
-                               !IsSquareUnderAttack(board, 0, 5, PieceColor.White) &&
-                               !IsSquareUnderAttack(board, 0, 6, PieceColor.White);
-                    }
-                    if (move.ToY == 2 && board.BlackQueenSideCastling)
-                    {
-                        return !IsSquareUnderAttack(board, 0, 4, PieceColor.White) &&
-                               !IsSquareUnderAttack(board, 0, 3, PieceColor.White) &&
-                               !IsSquareUnderAttack(board, 0, 2, PieceColor.White);
-                    }
-                }
-                return false;
+                return ValidateCastling(board, move, piece);
             }
 
-            if (xDiff <= 1 && yDiff <= 1)
+            return xDiff <= 1 && yDiff <= 1 && board.Squares[move.ToX, move.ToY].Color != piece.Color;
+        }
+
+        private bool ValidateCastling(Board board, Move move, Piece piece)
+        {
+            if (piece.Color == PieceColor.White)
             {
-                if (board.Squares[move.ToX, move.ToY].Color != piece.Color)
+                return (move.ToY == 6 && board.WhiteKingSideCastling && IsPathClear(board, 7, 4, 7, 7) && !IsAnySquareUnderAttack(board, 7, 4, 7, 6, PieceColor.Black)) ||
+                       (move.ToY == 2 && board.WhiteQueenSideCastling && IsPathClear(board, 7, 0, 7, 4) && !IsAnySquareUnderAttack(board, 7, 2, 7, 4, PieceColor.Black));
+            }
+            else
+            {
+                return (move.ToY == 6 && board.BlackKingSideCastling && IsPathClear(board, 0, 4, 0, 7) && !IsAnySquareUnderAttack(board, 0, 4, 0, 6, PieceColor.White)) ||
+                       (move.ToY == 2 && board.BlackQueenSideCastling && IsPathClear(board, 0, 0, 0, 4) && !IsAnySquareUnderAttack(board, 0, 2, 0, 4, PieceColor.White));
+            }
+        }
+
+        private bool IsPathClear(Board board, int startX, int startY, int endX, int endY)
+        {
+            int xDirection = startX == endX ? 0 : (endX > startX ? 1 : -1);
+            int yDirection = startY == endY ? 0 : (endY > startY ? 1 : -1);
+
+            for (int x = startX + xDirection, y = startY + yDirection; x != endX || y != endY; x += xDirection, y += yDirection)
+            {
+                if (board.Squares[x, y].Type != PieceType.Empty)
+                {
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
+        private bool IsAnySquareUnderAttack(Board board, int startX, int startY, int endX, int endY, PieceColor attackingColor)
+        {
+            int xDirection = startX == endX ? 0 : (endX > startX ? 1 : -1);
+            int yDirection = startY == endY ? 0 : (endY > startY ? 1 : -1);
+
+            for (int x = startX, y = startY; x != endX + xDirection || y != endY + yDirection; x += xDirection, y += yDirection)
+            {
+                if (IsSquareUnderAttack(board, x, y, attackingColor))
                 {
                     return true;
                 }
@@ -478,7 +433,15 @@ namespace ZabkaChessEngine
 
         private Board CopyBoard(Board board)
         {
-            Board newBoard = new Board();
+            Board newBoard = new Board
+            {
+                EnPassantTarget = board.EnPassantTarget,
+                WhiteKingSideCastling = board.WhiteKingSideCastling,
+                WhiteQueenSideCastling = board.WhiteQueenSideCastling,
+                BlackKingSideCastling = board.BlackKingSideCastling,
+                BlackQueenSideCastling = board.BlackQueenSideCastling
+            };
+
             for (int row = 0; row < 8; row++)
             {
                 for (int col = 0; col < 8; col++)
@@ -486,83 +449,105 @@ namespace ZabkaChessEngine
                     newBoard.Squares[row, col] = new Piece(board.Squares[row, col].Type, board.Squares[row, col].Color);
                 }
             }
-            newBoard.EnPassantTarget = board.EnPassantTarget;
+
             return newBoard;
         }
 
         public void ApplyMove(Board board, Move move)
         {
             Piece movingPiece = board.Squares[move.FromX, move.FromY];
-
             if (move.IsCastling)
             {
-                if (movingPiece.Color == PieceColor.White)
+                ApplyCastlingMove(board, move, movingPiece);
+                board.EnPassantTarget = null;
+
+            }
+            else if (movingPiece.Type == PieceType.Pawn && move.ToY != move.FromY && board.Squares[move.ToX, move.ToY].Type == PieceType.Empty)
+            {
+                ApplyEnPassantMove(board, move, movingPiece);
+                board.EnPassantTarget = null;
+
+            }
+            else
+            {
+                if (movingPiece.Type == PieceType.Pawn && Math.Abs(move.ToX - move.FromX) == 2)
                 {
-                    if (move.ToY == 6) // White king-side castling
-                    {
-                        board.Squares[7, 5] = new Piece(PieceType.Rook, PieceColor.White);
-                        board.Squares[7, 7] = new Piece(PieceType.Empty, PieceColor.None);
-                    }
-                    else if (move.ToY == 2) // White queen-side castling
-                    {
-                        board.Squares[7, 3] = new Piece(PieceType.Rook, PieceColor.White);
-                        board.Squares[7, 0] = new Piece(PieceType.Empty, PieceColor.None);
-                    }
-                    board.WhiteKingSideCastling = false;
-                    board.WhiteQueenSideCastling = false;
+                    board.EnPassantTarget = ((move.FromX + move.ToX) / 2, move.FromY);
                 }
                 else
                 {
-                    if (move.ToY == 6) // Black king-side castling
-                    {
-                        board.Squares[0, 5] = new Piece(PieceType.Rook, PieceColor.Black);
-                        board.Squares[0, 7] = new Piece(PieceType.Empty, PieceColor.None);
-                    }
-                    else if (move.ToY == 2) // Black queen-side castling
-                    {
-                        board.Squares[0, 3] = new Piece(PieceType.Rook, PieceColor.Black);
-                        board.Squares[0, 0] = new Piece(PieceType.Empty, PieceColor.None);
-                    }
-                    board.BlackKingSideCastling = false;
-                    board.BlackQueenSideCastling = false;
+                    board.EnPassantTarget = null;
                 }
+
+                if (move.Promotion != PieceType.Empty)
+                {
+                    board.Squares[move.ToX, move.ToY] = new Piece(move.Promotion, movingPiece.Color);
+                }
+                else
+                {
+                    board.Squares[move.ToX, move.ToY] = movingPiece;
+                }
+                board.Squares[move.FromX, move.FromY] = new Piece(PieceType.Empty, PieceColor.None);
+            }
+            
+            UpdateCastlingRights(board, move, movingPiece);
+        }
+
+        private void ApplyCastlingMove(Board board, Move move, Piece movingPiece)
+        {
+            int row = movingPiece.Color == PieceColor.White ? 7 : 0;
+            if (move.ToY == 6) // King-side castling
+            {
+                // Move the king
+                board.Squares[row, 6] = movingPiece;
+                board.Squares[row, 4] = new Piece(PieceType.Empty, PieceColor.None);
+
+                // Move the rook
+                board.Squares[row, 5] = new Piece(PieceType.Rook, movingPiece.Color);
+                board.Squares[row, 7] = new Piece(PieceType.Empty, PieceColor.None);
+            }
+            else if (move.ToY == 2) // Queen-side castling
+            {
+                // Move the king
+                board.Squares[row, 2] = movingPiece;
+                board.Squares[row, 4] = new Piece(PieceType.Empty, PieceColor.None);
+
+                // Move the rook
+                board.Squares[row, 3] = new Piece(PieceType.Rook, movingPiece.Color);
+                board.Squares[row, 0] = new Piece(PieceType.Empty, PieceColor.None);
             }
 
-            // Handle en passant capture
-            if (movingPiece.Type == PieceType.Pawn && move.ToY != move.FromY && board.Squares[move.ToX, move.ToY].Type == PieceType.Empty)
+            if (movingPiece.Color == PieceColor.White)
             {
-                int direction = movingPiece.Color == PieceColor.White ? 1 : -1;
-                board.Squares[move.ToX - direction, move.ToY] = new Piece(PieceType.Empty, PieceColor.None);
-                board.Squares[move.FromX, move.ToY] = new Piece(PieceType.Empty, PieceColor.None);
-            }
-
-            // Update en passant target
-            if (movingPiece.Type == PieceType.Pawn && Math.Abs(move.ToX - move.FromX) == 2)
-            {
-                board.EnPassantTarget = ((move.FromX + move.ToX) / 2, move.FromY);
+                board.WhiteKingSideCastling = false;
+                board.WhiteQueenSideCastling = false;
             }
             else
             {
-                board.EnPassantTarget = null;
+                board.BlackKingSideCastling = false;
+                board.BlackQueenSideCastling = false;
             }
+        }
 
-            // Update public en passant target variable
-            enPassantTarget = board.EnPassantTarget;
 
-            // Move the piece
-            if (move.Promotion != PieceType.Empty)
-            {
-                board.Squares[move.ToX, move.ToY] = new Piece(move.Promotion, movingPiece.Color);
-            }
-            else
-            {
-                board.Squares[move.ToX, move.ToY] = movingPiece;
-            }
+        private void ApplyEnPassantMove(Board board, Move move, Piece movingPiece)
+        {
+            int direction = movingPiece.Color == PieceColor.White ? 1 : -1;
+
+            // Capture the opponent's pawn
+            board.Squares[move.FromX, move.ToY] = new Piece(PieceType.Empty, PieceColor.None);
+
+            // Move the pawn to the new position
+            board.Squares[move.ToX, move.ToY] = movingPiece;
             board.Squares[move.FromX, move.FromY] = new Piece(PieceType.Empty, PieceColor.None);
 
+            // Reset en passant target
+            board.EnPassantTarget = null;
+        }
 
 
-            // Reset castling rights if king or rook moves
+        private void UpdateCastlingRights(Board board, Move move, Piece movingPiece)
+        {
             if (movingPiece.Type == PieceType.King)
             {
                 if (movingPiece.Color == PieceColor.White)
@@ -577,68 +562,48 @@ namespace ZabkaChessEngine
                 }
             }
 
-            //White Castling Rights
-            if ((move.FromX == 7 && move.FromY == 0) || (move.ToX == 7 && move.ToY == 0))
+            if (move.FromX == 7 && move.FromY == 0 || move.ToX == 7 && move.ToY == 0)
             {
                 board.WhiteQueenSideCastling = false;
             }
-            if ((move.FromX == 7 && move.FromY == 7) || (move.ToX == 7 && move.ToY == 7))
+            if (move.FromX == 7 && move.FromY == 7 || move.ToX == 7 && move.ToY == 7)
             {
                 board.WhiteKingSideCastling = false;
             }
-            //Black Castling Rights
-            if ((move.FromX == 0 && move.FromY == 0) || (move.ToX == 0 && move.ToY == 0))
+            if (move.FromX == 0 && move.FromY == 0 || move.ToX == 0 && move.ToY == 0)
             {
                 board.BlackQueenSideCastling = false;
             }
-            if ((move.FromX == 0 && move.FromY == 7) || (move.ToX == 0 && move.ToY == 7))
+            if (move.FromX == 0 && move.FromY == 7 || move.ToX == 0 && move.ToY == 7)
             {
                 board.BlackKingSideCastling = false;
             }
         }
 
-
         private bool IsKingInCheck(Board board, bool isWhiteTurn)
         {
-            // Find the king's position
-            int kingX = -1, kingY = -1;
-            PieceColor kingColor = isWhiteTurn ? PieceColor.White : PieceColor.Black;
+            (int kingX, int kingY) = FindKing(board, isWhiteTurn ? PieceColor.White : PieceColor.Black);
 
+            PieceColor opposingColor = isWhiteTurn ? PieceColor.Black : PieceColor.White;
+
+            return IsSquareUnderAttack(board, kingX, kingY, opposingColor);
+        }
+
+        private (int, int) FindKing(Board board, PieceColor kingColor)
+        {
             for (int row = 0; row < 8; row++)
             {
                 for (int col = 0; col < 8; col++)
                 {
                     if (board.Squares[row, col].Type == PieceType.King && board.Squares[row, col].Color == kingColor)
                     {
-                        kingX = row;
-                        kingY = col;
-                        break;
+                        return (row, col);
                     }
                 }
             }
-
-            // Check if any opposing piece can capture the king
-            for (int row = 0; row < 8; row++)
-            {
-                for (int col = 0; col < 8; col++)
-                {
-                    Piece piece = board.Squares[row, col];
-                    if (piece.Type != PieceType.Empty && piece.Color != kingColor)
-                    {
-                        List<Move> opponentMoves = new MoveGenerator().GeneratePieceMoves(board, piece, row, col);
-                        foreach (Move move in opponentMoves)
-                        {
-                            if (move.ToX == kingX && move.ToY == kingY)
-                            {
-                                return true;
-                            }
-                        }
-                    }
-                }
-            }
-
-            return false;
+            throw new Exception("King not found on the board.");
         }
+
         private bool IsSquareUnderAttack(Board board, int x, int y, PieceColor attackingColor)
         {
             for (int row = 0; row < 8; row++)
@@ -648,30 +613,21 @@ namespace ZabkaChessEngine
                     Piece piece = board.Squares[row, col];
                     if (piece.Color == attackingColor)
                     {
-                        List<Move> opponentMoves;
-                        if (piece.Type == PieceType.Pawn)
-                        {
-                            opponentMoves = new MoveGenerator().GeneratePawnAttacks(board, piece, row, col);
-                        }
-                        else
-                        {
-                            opponentMoves = new MoveGenerator().GeneratePieceMoves(board, piece, row, col);
-                        }
+                        List<Move> opponentMoves = piece.Type == PieceType.Pawn
+                            ? moveGenerator.GeneratePawnAttacks(board, piece, row, col)
+                            : moveGenerator.GeneratePieceMoves(board, piece, row, col);
 
-                        foreach (Move move in opponentMoves)
+                        if (opponentMoves.Any(move => move.ToX == x && move.ToY == y))
                         {
-                            if (move.ToX == x && move.ToY == y)
-                            {
-                                return true;
-                            }
+                            return true;
                         }
                     }
                 }
             }
             return false;
         }
-
     }
+
 
 
 
