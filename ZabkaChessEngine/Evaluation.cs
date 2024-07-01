@@ -8,9 +8,152 @@ namespace ZabkaChessEngine
 {
     public class Evaluation
     {
+        
+
         private static readonly int[] PieceValues = {
-        0, 100, 300, 300, 500, 900, 10000 // Empty, Pawn, Knight, Bishop, Rook, Queen, King
+        0, 100, 320, 330, 500, 900, 20000 // Empty, Pawn, Knight, Bishop, Rook, Queen, King
         };
+
+        private static readonly int[,] WhitePawnTable = new int[8, 8]
+        {
+            { 0,  0,  0,  0,  0,  0,  0,  0 },
+            { 50, 50, 50, 50, 50, 50, 50, 50 },
+            { 10, 10, 20, 30, 30, 20, 10, 10 },
+            { 5,  5, 10, 25, 25, 10,  5,  5 },
+            { 0,  0,  0, 20, 20,  0,  0,  0 },
+            { 5, -5,-10,  0,  0,-10, -5,  5 },
+            { 5, 10, 10,-20,-20, 10, 10,  5 },
+            { 0,  0,  0,  0,  0,  0,  0,  0 }
+        };
+
+        private static readonly int[,] BlackPawnTable = new int[8, 8]
+        {
+            { 0,  0,  0,  0,  0,  0,  0,  0 },
+            { 5, 10, 10,-20,-20, 10, 10,  5 },
+            { 5, -5,-10,  0,  0,-10, -5,  5 },
+            { 0,  0,  0, 20, 20,  0,  0,  0 },
+            { 5,  5, 10, 25, 25, 10,  5,  5 },
+            { 10, 10, 20, 30, 30, 20, 10, 10 },
+            { 50, 50, 50, 50, 50, 50, 50, 50 },
+            { 0,  0,  0,  0,  0,  0,  0,  0 }
+        };
+
+        private static readonly int[,] WhiteKnightTable = new int[8, 8]
+        {
+            { -50, -40, -30, -30, -30, -30, -40, -50 },
+            { -40, -20,   0,   0,   0,   0, -20, -40 },
+            { -30,   0,  10,  15,  15,  10,   0, -30 },
+            { -30,   5,  15,  20,  20,  15,   5, -30 },
+            { -30,   0,  15,  20,  20,  15,   0, -30 },
+            { -30,   5,  10,  15,  15,  10,   5, -30 },
+            { -40, -20,   0,   5,   5,   0, -20, -40 },
+            { -50, -40, -30, -30, -30, -30, -40, -50 }
+        };
+
+        private static readonly int[,] BlackKnightTable = new int[8, 8]
+        {
+            { -50, -40, -30, -30, -30, -30, -40, -50 },
+            { -40, -20,   0,   5,   5,   0, -20, -40 },
+            { -30,   5,  10,  15,  15,  10,   5, -30 },
+            { -30,   0,  15,  20,  20,  15,   0, -30 },
+            { -30,   5,  15,  20,  20,  15,   5, -30 },
+            { -30,   0,  10,  15,  15,  10,   0, -30 },
+            { -40, -20,   0,   0,   0,   0, -20, -40 },
+            { -50, -40, -30, -30, -30, -30, -40, -50 }
+        };
+        private static readonly int[,] WhiteBishopTable = new int[8, 8]
+        {
+            { -20, -10, -10, -10, -10, -10, -10, -20 },
+            { -10,   0,   0,   0,   0,   0,   0, -10 },
+            { -10,   0,   5,  10,  10,   5,   0, -10 },
+            { -10,   5,   5,  10,  10,   5,   5, -10 },
+            { -10,   0,  10,  10,  10,  10,   0, -10 },
+            { -10,  10,  10,  10,  10,  10,  10, -10 },
+            { -10,   5,   0,   0,   0,   0,   5, -10 },
+            { -20, -10, -10, -10, -10, -10, -10, -20 }
+        };
+
+        private static readonly int[,] BlackBishopTable = new int[8, 8]
+        {
+            { -20, -10, -10, -10, -10, -10, -10, -20 },
+            { -10,   5,   0,   0,   0,   0,   5, -10 },
+            { -10,  10,  10,  10,  10,  10,  10, -10 },
+            { -10,   0,  10,  10,  10,  10,   0, -10 },
+            { -10,   5,   5,  10,  10,   5,   5, -10 },
+            { -10,   0,   5,  10,  10,   5,   0, -10 },
+            { -10,   0,   0,   0,   0,   0,   0, -10 },
+            { -20, -10, -10, -10, -10, -10, -10, -20 }
+        };
+        private static readonly int[,] WhiteRookTable = new int[8, 8]
+        {
+            { 0,  0,  0,  0,  0,  0,  0,  0 },
+            { 5, 10, 10, 10, 10, 10, 10,  5 },
+            { -5,  0,  0,  0,  0,  0,  0, -5 },
+            { -5,  0,  0,  0,  0,  0,  0, -5 },
+            { -5,  0,  0,  0,  0,  0,  0, -5 },
+            { -5,  0,  0,  0,  0,  0,  0, -5 },
+            { -5,  0,  0,  0,  0,  0,  0, -5 },
+            { 0,  0,  0,  5,  5,  0,  0,  0 }
+        };
+
+        private static readonly int[,] BlackRookTable = new int[8, 8]
+        {
+            { 0,  0,  0,  5,  5,  0,  0,  0 },
+            { -5,  0,  0,  0,  0,  0,  0, -5 },
+            { -5,  0,  0,  0,  0,  0,  0, -5 },
+            { -5,  0,  0,  0,  0,  0,  0, -5 },
+            { -5,  0,  0,  0,  0,  0,  0, -5 },
+            { -5,  0,  0,  0,  0,  0,  0, -5 },
+            { 5, 10, 10, 10, 10, 10, 10,  5 },
+            { 0,  0,  0,  0,  0,  0,  0,  0 }
+        };
+        private static readonly int[,] WhiteQueenTable = new int[8, 8]
+        {
+            { -20, -10, -10,  -5,  -5, -10, -10, -20 },
+            { -10,   0,   0,   0,   0,   0,   0, -10 },
+            { -10,   0,   5,   5,   5,   5,   0, -10 },
+            { -5,   0,   5,   5,   5,   5,   0,  -5 },
+            { 0,   0,   5,   5,   5,   5,   0,  -5 },
+            { -10,   5,   5,   5,   5,   5,   0, -10 },
+            { -10,   0,   5,   0,   0,   0,   0, -10 },
+            { -20, -10, -10,  -5,  -5, -10, -10, -20 }
+        };
+
+        private static readonly int[,] BlackQueenTable = new int[8, 8]
+        {
+            { -20, -10, -10,  -5,  -5, -10, -10, -20 },
+            { -10,   0,   5,   0,   0,   0,   0, -10 },
+            { -10,   5,   5,   5,   5,   5,   0, -10 },
+            { 0,   0,   5,   5,   5,   5,   0,  -5 },
+            { -5,   0,   5,   5,   5,   5,   0,  -5 },
+            { -10,   0,   5,   5,   5,   5,   0, -10 },
+            { -10,   0,   0,   0,   0,   0,   0, -10 },
+            { -20, -10, -10,  -5,  -5, -10, -10, -20 }
+        };
+        private static readonly int[,] WhiteKingMiddleGameTable = new int[8, 8]
+        {
+            { -30, -40, -40, -50, -50, -40, -40, -30 },
+            { -30, -40, -40, -50, -50, -40, -40, -30 },
+            { -30, -40, -40, -50, -50, -40, -40, -30 },
+            { -30, -40, -40, -50, -50, -40, -40, -30 },
+            { -20, -30, -30, -40, -40, -30, -30, -20 },
+            { -10, -20, -20, -20, -20, -20, -20, -10 },
+            {  20,  20,   0,   0,   0,   0,  20,  20 },
+            {  20,  30,  10,   0,   0,  10,  30,  20 }
+        };
+
+        private static readonly int[,] BlackKingMiddleGameTable = new int[8, 8]
+        {
+            {  20,  30,  10,   0,   0,  10,  30,  20 },
+            {  20,  20,   0,   0,   0,   0,  20,  20 },
+            { -10, -20, -20, -20, -20, -20, -20, -10 },
+            { -20, -30, -30, -40, -40, -30, -30, -20 },
+            { -30, -40, -40, -50, -50, -40, -40, -30 },
+            { -30, -40, -40, -50, -50, -40, -40, -30 },
+            { -30, -40, -40, -50, -50, -40, -40, -30 },
+            { -30, -40, -40, -50, -50, -40, -40, -30 }
+        };
+
 
         private readonly MoveGenerator moveGenerator = new MoveGenerator();
 
@@ -41,24 +184,66 @@ namespace ZabkaChessEngine
 
         private int PieceSquareScore(Board board)
         {
-            // This method currently doesn't do anything meaningful.
-            // Add piece-square table logic here if needed.
             int score = 0;
-            // Example for pawns (you need to define PawnTable):
-            // int[,] PawnTable = { ... };
-            // for (int row = 0; row < 8; row++)
-            // {
-            //     for (int col = 0; col < 8; col++)
-            //     {
-            //         Piece piece = board.Squares[row, col];
-            //         if (piece.Type == PieceType.Pawn)
-            //         {
-            //             score += (int)piece.Color * PawnTable[row, col];
-            //         }
-            //     }
-            // }
+            var squares = board.Squares;
+            for (int row = 0; row < 8; row++)
+            {
+                for (int col = 0; col < 8; col++)
+                {
+                    Piece piece = squares[row, col];
+                    if (piece.Color == PieceColor.White)
+                    {
+                        switch (piece.Type)
+                        {
+                            case PieceType.Pawn:
+                                score += WhitePawnTable[row, col];
+                                break;
+                            case PieceType.Knight:
+                                score += WhiteKnightTable[row, col];
+                                break;
+                            case PieceType.Bishop:
+                                score += WhiteBishopTable[row, col];
+                                break;
+                            case PieceType.Rook:
+                                score += WhiteRookTable[row, col];
+                                break;
+                            case PieceType.Queen:
+                                score += WhiteQueenTable[row, col];
+                                break;
+                            case PieceType.King:
+                                score += WhiteKingMiddleGameTable[row, col];
+                                break;
+                        }
+                    }
+                    else if (piece.Color == PieceColor.Black)
+                    {
+                        switch (piece.Type)
+                        {
+                            case PieceType.Pawn:
+                                score -= BlackPawnTable[row, col];
+                                break;
+                            case PieceType.Knight:
+                                score -= BlackKnightTable[row, col];
+                                break;
+                            case PieceType.Bishop:
+                                score -= BlackBishopTable[row, col];
+                                break;
+                            case PieceType.Rook:
+                                score -= BlackRookTable[row, col];
+                                break;
+                            case PieceType.Queen:
+                                score -= BlackQueenTable[row, col];
+                                break;
+                            case PieceType.King:
+                                score -= BlackKingMiddleGameTable[row, col];
+                                break;
+                        }
+                    }
+                }
+            }
             return score;
         }
+
 
         private int MobilityScore(Board board)
         {

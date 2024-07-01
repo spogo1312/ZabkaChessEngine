@@ -48,6 +48,20 @@ namespace ZabkaChessEngine
             MoveGenerator moveGenerator = new MoveGenerator();
             List<Move> allMoves = moveGenerator.GenerateAllMoves(board, isMaximizingPlayer);
 
+            // Evaluate and sort moves based on their heuristic evaluation
+            allMoves.Sort((move1, move2) =>
+            {
+                Board boardCopy1 = CopyBoard(board);
+                moveValidator.ApplyMove(boardCopy1, move1);
+                int eval1 = evaluation.Evaluate(boardCopy1);
+
+                Board boardCopy2 = CopyBoard(board);
+                moveValidator.ApplyMove(boardCopy2, move2);
+                int eval2 = evaluation.Evaluate(boardCopy2);
+
+                return isMaximizingPlayer ? eval2.CompareTo(eval1) : eval1.CompareTo(eval2);
+            });
+
             if (isMaximizingPlayer)
             {
                 int maxEval = int.MinValue;
@@ -83,6 +97,7 @@ namespace ZabkaChessEngine
                 return minEval;
             }
         }
+
 
         private Board CopyBoard(Board board)
         {
