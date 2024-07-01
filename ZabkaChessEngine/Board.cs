@@ -36,7 +36,7 @@ namespace ZabkaChessEngine
         }
     }
 
-    public struct Board
+    public class Board
     {
         public Piece[,] Squares { get; set; }
         public (int x, int y)? EnPassantTarget { get; set; }

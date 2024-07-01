@@ -28,7 +28,7 @@ namespace ZabkaChessEngine
         public static readonly Move NoMove = new Move(-1, -1, -1, -1);
     }
 
-    public struct MoveGenerator
+    public class MoveGenerator
     {
         private static readonly Random random = new Random();
         private static readonly int[] Directions = { -1, 0, 1 };
@@ -247,15 +247,11 @@ namespace ZabkaChessEngine
     }
 
 
-    public struct MoveValidator
+    public class MoveValidator
     {
         private MoveGenerator moveGenerator = new MoveGenerator();
         public Move LastMove { get; set; }
         public (int x, int y)? enPassantTarget;
-
-        public MoveValidator()
-        {
-        }
 
         public bool IsMoveLegal(Board board, Move move, bool isWhiteTurn)
         {

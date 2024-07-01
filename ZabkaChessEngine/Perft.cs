@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace ZabkaChessEngine
 {
-    public struct Perft
+    public class Perft
     {
         private MoveGenerator moveGenerator;
         private MoveValidator moveValidator;

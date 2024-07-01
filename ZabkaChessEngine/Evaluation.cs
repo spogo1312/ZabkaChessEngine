@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace ZabkaChessEngine
 {
-    public struct Evaluation
+    public class Evaluation
     {
         
 
@@ -156,10 +156,6 @@ namespace ZabkaChessEngine
 
 
         private readonly MoveGenerator moveGenerator = new MoveGenerator();
-
-        public Evaluation()
-        {
-        }
 
         public int Evaluate(Board board)
         {
