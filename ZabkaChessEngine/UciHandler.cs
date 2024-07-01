@@ -4,7 +4,7 @@ using ZabkaChessEngine;
 
 namespace ZabkaChessEngine 
 {
-    public class UciHandler
+    public struct UciHandler
     {
         private Board board;
         private MoveGenerator moveGenerator;
