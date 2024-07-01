@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -19,6 +20,8 @@ namespace ZabkaChessEngine
 
         public void PerformPerft(Board board, int depth)
         {
+            Stopwatch stopwatch = new Stopwatch();
+            stopwatch.Start();
             Dictionary<string, long> moveCounts = new Dictionary<string, long>();
             long totalNodes = 0;
 
@@ -48,6 +51,8 @@ namespace ZabkaChessEngine
             {
                 Console.WriteLine($"{moveCount.Key} - {moveCount.Value}");
             }
+            stopwatch.Stop();
+            Console.WriteLine($"Time taken: {stopwatch.ElapsedMilliseconds} ms");
         }
 
         private long PerformPerftRecursive(Board board, int depth)

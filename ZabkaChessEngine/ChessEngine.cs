@@ -14,7 +14,7 @@ namespace ZabkaChessEngine
         public Move SelectBestMove(Board board)
         {
             int bestScore = board.IsWhiteTurn ? int.MinValue : int.MaxValue;
-            Move bestMove = null;
+            Move bestMove = Move.NoMove;
 
             MoveGenerator moveGenerator = new MoveGenerator();
             List<Move> allMoves = moveGenerator.GenerateAllMoves(board, board.IsWhiteTurn);

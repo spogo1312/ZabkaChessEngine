@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace ZabkaChessEngine
 {
-    public class Move
+    public struct Move
     {
         public int FromX { get; set; }
         public int FromY { get; set; }
@@ -25,6 +25,7 @@ namespace ZabkaChessEngine
             Promotion = promotion;
             IsCastling = isCastling; // Initialize castling flag
         }
+        public static readonly Move NoMove = new Move(-1, -1, -1, -1);
     }
 
     public class MoveGenerator

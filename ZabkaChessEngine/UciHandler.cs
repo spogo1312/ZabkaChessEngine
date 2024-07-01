@@ -263,7 +263,7 @@ namespace ZabkaChessEngine
             ChessEngine engine = new ChessEngine();
             Move bestMove = engine.SelectBestMove(board);
 
-            if (bestMove != null)
+            if (bestMove.FromX != -1 && bestMove.FromY != -1)
             {
                 string moveString = MoveToString(bestMove);
                 Console.WriteLine($"bestmove {moveString}");

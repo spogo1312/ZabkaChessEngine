@@ -24,7 +24,7 @@ namespace ZabkaChessEngine
         Black = -1
     }
 
-    public class Piece
+    public struct Piece
     {
         public PieceType Type { get; set; }
         public PieceColor Color { get; set; }
