@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -13,6 +14,8 @@ namespace ZabkaChessEngine
 
         public Move SelectBestMove(Board board)
         {
+            Stopwatch stopwatch = new Stopwatch();
+            stopwatch.Start();
             int bestScore = board.IsWhiteTurn ? int.MinValue : int.MaxValue;
             Move bestMove = Move.NoMove;
 
@@ -35,6 +38,8 @@ namespace ZabkaChessEngine
                     }
                 }
             }
+            stopwatch.Stop();
+            Console.WriteLine("Move Time:" + stopwatch.ElapsedMilliseconds + "ms");
             return bestMove;
         }
 
