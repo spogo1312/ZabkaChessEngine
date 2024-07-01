@@ -31,21 +31,21 @@ namespace ZabkaChessEngine
     public class MoveGenerator
     {
         private static readonly Random random = new Random();
-        private static readonly int[] Directions = { -1, 0, 1 };
 
         public List<Move> GenerateAllMoves(Board board, bool isWhiteTurn)
         {
             List<Move> allPossibleMoves = new List<Move>();
-            PieceColor currentColor = isWhiteTurn ? PieceColor.White : PieceColor.Black;
 
             for (int fromX = 0; fromX < 8; fromX++)
             {
                 for (int fromY = 0; fromY < 8; fromY++)
                 {
                     Piece piece = board.Squares[fromX, fromY];
-                    if (piece.Type != PieceType.Empty && piece.Color == currentColor)
+                    if (piece.Type != PieceType.Empty && piece.Color == (isWhiteTurn ? PieceColor.White : PieceColor.Black))
                     {
-                        allPossibleMoves.AddRange(GeneratePieceMoves(board, piece, fromX, fromY));
+                        List<Move> pieceMoves = GeneratePieceMoves(board, piece, fromX, fromY);
+                        allPossibleMoves.AddRange(pieceMoves);
+                        
                     }
                 }
             }
@@ -55,21 +55,34 @@ namespace ZabkaChessEngine
 
         public List<Move> GeneratePieceMoves(Board board, Piece piece, int fromX, int fromY)
         {
-            List<Move> moves = piece.Type switch
+            List<Move> moves = new List<Move>();
+
+            switch (piece.Type)
             {
-                PieceType.Pawn => GeneratePawnMoves(board, piece, fromX, fromY),
-                PieceType.Rook => GenerateSlidingMoves(board, piece, fromX, fromY, new (int, int)[] { (1, 0), (-1, 0), (0, 1), (0, -1) }),
-                PieceType.Knight => GenerateFixedMoves(board, piece, fromX, fromY, new (int, int)[] { (-2, -1), (-1, -2), (-2, 1), (-1, 2), (1, -2), (2, -1), (1, 2), (2, 1) }),
-                PieceType.Bishop => GenerateSlidingMoves(board, piece, fromX, fromY, new (int, int)[] { (1, 1), (1, -1), (-1, 1), (-1, -1) }),
-                PieceType.Queen => GenerateSlidingMoves(board, piece, fromX, fromY, new (int, int)[] { (1, 0), (-1, 0), (0, 1), (0, -1), (1, 1), (1, -1), (-1, 1), (-1, -1) }),
-                PieceType.King => GenerateKingMoves(board, piece, fromX, fromY),
-                _ => new List<Move>()
-            };
+                case PieceType.Pawn:
+                    moves.AddRange(GeneratePawnMoves(board, piece, fromX, fromY));
+                    break;
+                case PieceType.Rook:
+                    moves.AddRange(GenerateRookMoves(board, piece, fromX, fromY));
+                    break;
+                case PieceType.Knight:
+                    moves.AddRange(GenerateKnightMoves(board, piece, fromX, fromY));
+                    break;
+                case PieceType.Bishop:
+                    moves.AddRange(GenerateBishopMoves(board, piece, fromX, fromY));
+                    break;
+                case PieceType.Queen:
+                    moves.AddRange(GenerateQueenMoves(board, piece, fromX, fromY));
+                    break;
+                case PieceType.King:
+                    moves.AddRange(GenerateKingMoves(board, piece, fromX, fromY));
+                    break;
+            }
 
             return moves;
         }
 
-        private List<Move> GeneratePawnMoves(Board board, Piece piece, int fromX, int fromY)
+        public List<Move> GeneratePawnMoves(Board board, Piece piece, int fromX, int fromY)
         {
             List<Move> moves = new List<Move>();
             int direction = piece.Color == PieceColor.White ? -1 : 1;
@@ -82,7 +95,10 @@ namespace ZabkaChessEngine
                 if (fromX + direction == promotionRow)
                 {
                     // Add all promotion options
-                    AddPawnPromotionMoves(moves, fromX, fromY, fromX + direction, fromY);
+                    moves.Add(new Move(fromX, fromY, fromX + direction, fromY, PieceType.Queen));
+                    moves.Add(new Move(fromX, fromY, fromX + direction, fromY, PieceType.Rook));
+                    moves.Add(new Move(fromX, fromY, fromX + direction, fromY, PieceType.Bishop));
+                    moves.Add(new Move(fromX, fromY, fromX + direction, fromY, PieceType.Knight));
                 }
                 else
                 {
@@ -95,7 +111,36 @@ namespace ZabkaChessEngine
             }
 
             // Capture diagonally
-            GeneratePawnCaptures(board, piece, fromX, fromY, direction, moves, promotionRow);
+            if (IsInBounds(fromX + direction, fromY - 1) && board.Squares[fromX + direction, fromY - 1].Color == (piece.Color == PieceColor.White ? PieceColor.Black : PieceColor.White))
+            {
+                if (fromX + direction == promotionRow)
+                {
+                    // Add all promotion options
+                    moves.Add(new Move(fromX, fromY, fromX + direction, fromY - 1, PieceType.Queen));
+                    moves.Add(new Move(fromX, fromY, fromX + direction, fromY - 1, PieceType.Rook));
+                    moves.Add(new Move(fromX, fromY, fromX + direction, fromY - 1, PieceType.Bishop));
+                    moves.Add(new Move(fromX, fromY, fromX + direction, fromY - 1, PieceType.Knight));
+                }
+                else
+                {
+                    moves.Add(new Move(fromX, fromY, fromX + direction, fromY - 1));
+                }
+            }
+            if (IsInBounds(fromX + direction, fromY + 1) && board.Squares[fromX + direction, fromY + 1].Color == (piece.Color == PieceColor.White ? PieceColor.Black : PieceColor.White))
+            {
+                if (fromX + direction == promotionRow)
+                {
+                    // Add all promotion options
+                    moves.Add(new Move(fromX, fromY, fromX + direction, fromY + 1, PieceType.Queen));
+                    moves.Add(new Move(fromX, fromY, fromX + direction, fromY + 1, PieceType.Rook));
+                    moves.Add(new Move(fromX, fromY, fromX + direction, fromY + 1, PieceType.Bishop));
+                    moves.Add(new Move(fromX, fromY, fromX + direction, fromY + 1, PieceType.Knight));
+                }
+                else
+                {
+                    moves.Add(new Move(fromX, fromY, fromX + direction, fromY + 1));
+                }
+            }
 
             // En passant
             if (board.EnPassantTarget.HasValue)
@@ -113,53 +158,44 @@ namespace ZabkaChessEngine
                 }
             }
 
+
+
             return moves;
         }
 
-        private void GeneratePawnCaptures(Board board, Piece piece, int fromX, int fromY, int direction, List<Move> moves, int promotionRow)
-        {
-            int[] captureY = { fromY - 1, fromY + 1 };
-            foreach (var y in captureY)
-            {
-                if (IsInBounds(fromX + direction, y) && board.Squares[fromX + direction, y].Color == (piece.Color == PieceColor.White ? PieceColor.Black : PieceColor.White))
-                {
-                    if (fromX + direction == promotionRow)
-                    {
-                        AddPawnPromotionMoves(moves, fromX, fromY, fromX + direction, y);
-                    }
-                    else
-                    {
-                        moves.Add(new Move(fromX, fromY, fromX + direction, y));
-                    }
-                }
-            }
-        }
-
-        private void AddPawnPromotionMoves(List<Move> moves, int fromX, int fromY, int toX, int toY)
-        {
-            moves.Add(new Move(fromX, fromY, toX, toY, PieceType.Queen));
-            moves.Add(new Move(fromX, fromY, toX, toY, PieceType.Rook));
-            moves.Add(new Move(fromX, fromY, toX, toY, PieceType.Bishop));
-            moves.Add(new Move(fromX, fromY, toX, toY, PieceType.Knight));
-        }
-
-        private List<Move> GenerateSlidingMoves(Board board, Piece piece, int fromX, int fromY, (int, int)[] directions)
+        private List<Move> GenerateRookMoves(Board board, Piece piece, int fromX, int fromY)
         {
             List<Move> moves = new List<Move>();
+            int[] directions = { -1, 1 };
 
-            foreach (var (dx, dy) in directions)
+            foreach (int direction in directions)
             {
-                for (int x = fromX + dx, y = fromY + dy; IsInBounds(x, y); x += dx, y += dy)
+                for (int i = fromX + direction; i >= 0 && i < 8; i += direction)
                 {
-                    if (board.Squares[x, y].Type == PieceType.Empty)
+                    if (board.Squares[i, fromY].Type == PieceType.Empty)
                     {
-                        moves.Add(new Move(fromX, fromY, x, y));
+                        moves.Add(new Move(fromX, fromY, i, fromY));
                     }
                     else
                     {
-                        if (board.Squares[x, y].Color != piece.Color)
+                        if (board.Squares[i, fromY].Color != piece.Color)
                         {
-                            moves.Add(new Move(fromX, fromY, x, y));
+                            moves.Add(new Move(fromX, fromY, i, fromY));
+                        }
+                        break;
+                    }
+                }
+                for (int j = fromY + direction; j >= 0 && j < 8; j += direction)
+                {
+                    if (board.Squares[fromX, j].Type == PieceType.Empty)
+                    {
+                        moves.Add(new Move(fromX, fromY, fromX, j));
+                    }
+                    else
+                    {
+                        if (board.Squares[fromX, j].Color != piece.Color)
+                        {
+                            moves.Add(new Move(fromX, fromY, fromX, j));
                         }
                         break;
                     }
@@ -169,36 +205,91 @@ namespace ZabkaChessEngine
             return moves;
         }
 
-        private List<Move> GenerateFixedMoves(Board board, Piece piece, int fromX, int fromY, (int, int)[] moveOffsets)
+        private List<Move> GenerateKnightMoves(Board board, Piece piece, int fromX, int fromY)
         {
             List<Move> moves = new List<Move>();
+            int[,] knightMoves = { { -2, -1 }, { -1, -2 }, { -2, 1 }, { -1, 2 }, { 1, -2 }, { 2, -1 }, { 1, 2 }, { 2, 1 } };
 
-            foreach (var (dx, dy) in moveOffsets)
+            for (int i = 0; i < knightMoves.GetLength(0); i++)
             {
-                int toX = fromX + dx;
-                int toY = fromY + dy;
+                int toX = fromX + knightMoves[i, 0];
+                int toY = fromY + knightMoves[i, 1];
 
-                if (IsInBounds(toX, toY) && (board.Squares[toX, toY].Type == PieceType.Empty || board.Squares[toX, toY].Color != piece.Color))
+                if (toX >= 0 && toX < 8 && toY >= 0 && toY < 8)
                 {
-                    moves.Add(new Move(fromX, fromY, toX, toY));
+                    if (board.Squares[toX, toY].Type == PieceType.Empty || board.Squares[toX, toY].Color != piece.Color)
+                    {
+                        moves.Add(new Move(fromX, fromY, toX, toY));
+                    }
                 }
             }
 
             return moves;
         }
 
-        private List<Move> GenerateKingMoves(Board board, Piece piece, int fromX, int fromY)
+        private List<Move> GenerateBishopMoves(Board board, Piece piece, int fromX, int fromY)
         {
-            List<Move> moves = GenerateFixedMoves(board, piece, fromX, fromY, new (int, int)[] { (1, 0), (1, 1), (1, -1), (0, 1), (0, -1), (-1, 0), (-1, 1), (-1, -1) });
+            List<Move> moves = new List<Move>();
+            int[] directions = { -1, 1 };
 
-            // Castling moves
-            AddCastlingMoves(board, piece, fromX, fromY, moves);
+            foreach (int directionX in directions)
+            {
+                foreach (int directionY in directions)
+                {
+                    for (int i = fromX + directionX, j = fromY + directionY; i >= 0 && i < 8 && j >= 0 && j < 8; i += directionX, j += directionY)
+                    {
+                        if (board.Squares[i, j].Type == PieceType.Empty)
+                        {
+                            moves.Add(new Move(fromX, fromY, i, j));
+                        }
+                        else
+                        {
+                            if (board.Squares[i, j].Color != piece.Color)
+                            {
+                                moves.Add(new Move(fromX, fromY, i, j));
+                            }
+                            break;
+                        }
+                    }
+                }
+            }
 
             return moves;
         }
 
-        private void AddCastlingMoves(Board board, Piece piece, int fromX, int fromY, List<Move> moves)
+        private List<Move> GenerateQueenMoves(Board board, Piece piece, int fromX, int fromY)
         {
+            List<Move> moves = new List<Move>();
+            moves.AddRange(GenerateRookMoves(board, piece, fromX, fromY));
+            moves.AddRange(GenerateBishopMoves(board, piece, fromX, fromY));
+            return moves;
+        }
+
+        private List<Move> GenerateKingMoves(Board board, Piece piece, int fromX, int fromY)
+        {
+            List<Move> moves = new List<Move>();
+            int[] directions = { -1, 0, 1 };
+
+            foreach (int directionX in directions)
+            {
+                foreach (int directionY in directions)
+                {
+                    if (directionX == 0 && directionY == 0) continue;
+
+                    int toX = fromX + directionX;
+                    int toY = fromY + directionY;
+
+                    if (toX >= 0 && toX < 8 && toY >= 0 && toY < 8)
+                    {
+                        if (board.Squares[toX, toY].Type == PieceType.Empty || board.Squares[toX, toY].Color != piece.Color)
+                        {
+                            moves.Add(new Move(fromX, fromY, toX, toY));
+                        }
+                    }
+                }
+            }
+
+            // Castling moves
             if (piece.Color == PieceColor.White)
             {
                 if (board.WhiteKingSideCastling && board.Squares[7, 5].Type == PieceType.Empty && board.Squares[7, 6].Type == PieceType.Empty)
@@ -221,6 +312,8 @@ namespace ZabkaChessEngine
                     moves.Add(new Move(fromX, fromY, 0, 2, PieceType.Empty, true));
                 }
             }
+
+            return moves;
         }
         public List<Move> GeneratePawnAttacks(Board board, Piece piece, int fromX, int fromY)
         {
@@ -239,13 +332,11 @@ namespace ZabkaChessEngine
 
             return attacks;
         }
-
         public bool IsInBounds(int x, int y)
         {
             return x >= 0 && x < 8 && y >= 0 && y < 8;
         }
     }
-
 
     public class MoveValidator
     {
