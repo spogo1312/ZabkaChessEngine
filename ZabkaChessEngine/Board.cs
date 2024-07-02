@@ -41,37 +41,19 @@ namespace ZabkaChessEngine
         public Piece[,] Squares { get; set; }
         public (int x, int y)? EnPassantTarget { get; set; }
         public bool IsWhiteTurn { get; set; }
-
         public bool WhiteKingSideCastling { get; set; }
         public bool WhiteQueenSideCastling { get; set; }
         public bool BlackKingSideCastling { get; set; }
         public bool BlackQueenSideCastling { get; set; }
 
-
         public Board()
         {
             Squares = new Piece[8, 8];
-            EnPassantTarget = null;
-            IsWhiteTurn = true;
             InitializeBoard();
-            WhiteKingSideCastling = true;
-            WhiteQueenSideCastling = true;
-            BlackKingSideCastling = true;
-            BlackQueenSideCastling = true;
-
         }
 
         private void InitializeBoard()
         {
-            // Initialize all squares to empty
-            for (int row = 0; row < 8; row++)
-            {
-                for (int col = 0; col < 8; col++)
-                {
-                    Squares[row, col] = new Piece(PieceType.Empty, PieceColor.None);
-                }
-            }
-
             // Set up pawns
             for (int i = 0; i < 8; i++)
             {
@@ -92,13 +74,21 @@ namespace ZabkaChessEngine
             Squares[7, 2] = Squares[7, 5] = new Piece(PieceType.Bishop, PieceColor.White);
             Squares[7, 3] = new Piece(PieceType.Queen, PieceColor.White);
             Squares[7, 4] = new Piece(PieceType.King, PieceColor.White);
+
+            // Initialize other properties
+            EnPassantTarget = null;
+            IsWhiteTurn = true;
+            WhiteKingSideCastling = true;
+            WhiteQueenSideCastling = true;
+            BlackKingSideCastling = true;
+            BlackQueenSideCastling = true;
         }
 
         public void SetPositionFromFEN(string fen)
         {
             // Split the FEN string into its components
             string[] parts = fen.Split(' ');
-            if (parts.Length < 1)
+            if (parts.Length < 6)
             {
                 throw new ArgumentException("Invalid FEN string.");
             }
@@ -141,6 +131,7 @@ namespace ZabkaChessEngine
                     }
                 }
             }
+
             // Parse side to move
             IsWhiteTurn = parts[1] == "w";
 
@@ -181,14 +172,7 @@ namespace ZabkaChessEngine
 
             Console.WriteLine();
             Console.WriteLine("   a b c d e f g h");
-            if (IsWhiteTurn)
-            {
-                Console.WriteLine("white turn");
-            }
-            else 
-            {
-                Console.WriteLine("black turn");
-            }
+            Console.WriteLine(IsWhiteTurn ? "white turn" : "black turn");
         }
 
         private char GetPieceSymbol(Piece piece)

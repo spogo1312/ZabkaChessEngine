@@ -569,15 +569,24 @@ namespace ZabkaChessEngine
 
         private Board CopyBoard(Board board)
         {
-            Board newBoard = new Board();
+            Board newBoard = new Board
+            {
+                EnPassantTarget = board.EnPassantTarget,
+                IsWhiteTurn = board.IsWhiteTurn,
+                WhiteKingSideCastling = board.WhiteKingSideCastling,
+                WhiteQueenSideCastling = board.WhiteQueenSideCastling,
+                BlackKingSideCastling = board.BlackKingSideCastling,
+                BlackQueenSideCastling = board.BlackQueenSideCastling
+            };
+
             for (int row = 0; row < 8; row++)
             {
                 for (int col = 0; col < 8; col++)
                 {
-                    newBoard.Squares[row, col] = new Piece(board.Squares[row, col].Type, board.Squares[row, col].Color);
+                    newBoard.Squares[row, col] = board.Squares[row, col];
                 }
             }
-            newBoard.EnPassantTarget = board.EnPassantTarget;
+
             return newBoard;
         }
 
@@ -692,46 +701,31 @@ namespace ZabkaChessEngine
         private bool IsKingInCheck(Board board, bool isWhiteTurn)
         {
             // Find the king's position
-            int kingX = -1, kingY = -1;
-            PieceColor kingColor = isWhiteTurn ? PieceColor.White : PieceColor.Black;
+            (int kingX, int kingY) = FindKing(board, isWhiteTurn ? PieceColor.White : PieceColor.Black);
 
+            // Check if the king is under attack
+            return IsSquareUnderAttack(board, kingX, kingY, isWhiteTurn ? PieceColor.Black : PieceColor.White);
+        }
+
+        private (int, int) FindKing(Board board, PieceColor kingColor)
+        {
             for (int row = 0; row < 8; row++)
             {
                 for (int col = 0; col < 8; col++)
                 {
                     if (board.Squares[row, col].Type == PieceType.King && board.Squares[row, col].Color == kingColor)
                     {
-                        kingX = row;
-                        kingY = col;
-                        break;
+                        return (row, col);
                     }
                 }
             }
-
-            // Check if any opposing piece can capture the king
-            for (int row = 0; row < 8; row++)
-            {
-                for (int col = 0; col < 8; col++)
-                {
-                    Piece piece = board.Squares[row, col];
-                    if (piece.Type != PieceType.Empty && piece.Color != kingColor)
-                    {
-                        List<Move> opponentMoves = new MoveGenerator().GeneratePieceMoves(board, piece, row, col);
-                        foreach (Move move in opponentMoves)
-                        {
-                            if (move.ToX == kingX && move.ToY == kingY)
-                            {
-                                return true;
-                            }
-                        }
-                    }
-                }
-            }
-
-            return false;
+            throw new Exception("King not found on the board.");
         }
+
         private bool IsSquareUnderAttack(Board board, int x, int y, PieceColor attackingColor)
         {
+            MoveGenerator moveGenerator = new MoveGenerator();
+
             for (int row = 0; row < 8; row++)
             {
                 for (int col = 0; col < 8; col++)
@@ -739,21 +733,22 @@ namespace ZabkaChessEngine
                     Piece piece = board.Squares[row, col];
                     if (piece.Color == attackingColor)
                     {
-                        List<Move> opponentMoves;
                         if (piece.Type == PieceType.Pawn)
                         {
-                            opponentMoves = new MoveGenerator().GeneratePawnAttacks(board, piece, row, col);
+                            if (IsPawnAttackingSquare(board, piece, row, col, x, y))
+                            {
+                                return true;
+                            }
                         }
                         else
                         {
-                            opponentMoves = new MoveGenerator().GeneratePieceMoves(board, piece, row, col);
-                        }
-
-                        foreach (Move move in opponentMoves)
-                        {
-                            if (move.ToX == x && move.ToY == y)
+                            List<Move> possibleMoves = moveGenerator.GeneratePieceMoves(board, piece, row, col);
+                            foreach (Move move in possibleMoves)
                             {
-                                return true;
+                                if (move.ToX == x && move.ToY == y)
+                                {
+                                    return true;
+                                }
                             }
                         }
                     }
@@ -761,6 +756,13 @@ namespace ZabkaChessEngine
             }
             return false;
         }
+
+        private bool IsPawnAttackingSquare(Board board, Piece pawn, int fromX, int fromY, int toX, int toY)
+        {
+            int direction = pawn.Color == PieceColor.White ? -1 : 1;
+            return (fromX + direction == toX && (fromY - 1 == toY || fromY + 1 == toY));
+        }
+
 
     }
 

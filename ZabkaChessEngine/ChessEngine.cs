@@ -42,6 +42,7 @@ namespace ZabkaChessEngine
             stopwatch.Stop();
             Console.WriteLine("Nodes searched:" + nodes);       
             Console.WriteLine("Move Time:" + stopwatch.ElapsedMilliseconds + "ms");
+            Console.WriteLine("evaluation:" + bestScore);
             return bestMove;
         }
 
@@ -110,20 +111,24 @@ namespace ZabkaChessEngine
 
         private Board CopyBoard(Board board)
         {
-            Board newBoard = new Board();
+            Board newBoard = new Board
+            {
+                EnPassantTarget = board.EnPassantTarget,
+                IsWhiteTurn = board.IsWhiteTurn,
+                WhiteKingSideCastling = board.WhiteKingSideCastling,
+                WhiteQueenSideCastling = board.WhiteQueenSideCastling,
+                BlackKingSideCastling = board.BlackKingSideCastling,
+                BlackQueenSideCastling = board.BlackQueenSideCastling
+            };
+
             for (int row = 0; row < 8; row++)
             {
                 for (int col = 0; col < 8; col++)
                 {
-                    newBoard.Squares[row, col] = new Piece(board.Squares[row, col].Type, board.Squares[row, col].Color);
+                    newBoard.Squares[row, col] = board.Squares[row, col];
                 }
             }
-            newBoard.EnPassantTarget = board.EnPassantTarget;
-            newBoard.IsWhiteTurn = board.IsWhiteTurn;
-            newBoard.WhiteKingSideCastling = board.WhiteKingSideCastling;
-            newBoard.WhiteQueenSideCastling = board.WhiteQueenSideCastling;
-            newBoard.BlackKingSideCastling = board.BlackKingSideCastling;
-            newBoard.BlackQueenSideCastling = board.BlackQueenSideCastling;
+
             return newBoard;
         }
     }
