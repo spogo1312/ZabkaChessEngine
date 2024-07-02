@@ -11,6 +11,7 @@ namespace ZabkaChessEngine
     {
         private readonly Evaluation evaluation = new Evaluation();
         private readonly MoveValidator moveValidator = new MoveValidator();
+        long nodes = 0;
 
         public Move SelectBestMove(Board board)
         {
@@ -39,12 +40,15 @@ namespace ZabkaChessEngine
                 }
             }
             stopwatch.Stop();
+            Console.WriteLine("Nodes searched:" + nodes);       
             Console.WriteLine("Move Time:" + stopwatch.ElapsedMilliseconds + "ms");
             return bestMove;
         }
 
         private int Minimax(Board board, int depth, int alpha, int beta, bool isMaximizingPlayer)
         {
+            nodes++;
+
             if (depth == 0)
             {
                 return evaluation.Evaluate(board);
@@ -54,18 +58,18 @@ namespace ZabkaChessEngine
             List<Move> allMoves = moveGenerator.GenerateAllMoves(board, isMaximizingPlayer);
 
             // Evaluate and sort moves based on their heuristic evaluation
-            allMoves.Sort((move1, move2) =>
-            {
-                Board boardCopy1 = CopyBoard(board);
-                moveValidator.ApplyMove(boardCopy1, move1);
-                int eval1 = evaluation.Evaluate(boardCopy1);
+            //allMoves.Sort((move1, move2) =>
+            //{
+            //    Board boardCopy1 = CopyBoard(board);
+            //    moveValidator.ApplyMove(boardCopy1, move1);
+            //    int eval1 = evaluation.Evaluate(boardCopy1);
 
-                Board boardCopy2 = CopyBoard(board);
-                moveValidator.ApplyMove(boardCopy2, move2);
-                int eval2 = evaluation.Evaluate(boardCopy2);
+            //    Board boardCopy2 = CopyBoard(board);
+            //    moveValidator.ApplyMove(boardCopy2, move2);
+            //    int eval2 = evaluation.Evaluate(boardCopy2);
 
-                return isMaximizingPlayer ? eval2.CompareTo(eval1) : eval1.CompareTo(eval2);
-            });
+            //    return isMaximizingPlayer ? eval2.CompareTo(eval1) : eval1.CompareTo(eval2);
+            //});
 
             if (isMaximizingPlayer)
             {
