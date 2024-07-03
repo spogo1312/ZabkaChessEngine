@@ -193,36 +193,55 @@ namespace ZabkaChessEngine
                     Piece piece = squares[row, col];
                     if (piece.Color == PieceColor.White)
                     {
-                        score += GetPieceSquareValue(piece, row, col, true);
+                        switch (piece.Type)
+                        {
+                            case PieceType.Pawn:
+                                score += WhitePawnTable[row, col];
+                                break;
+                            case PieceType.Knight:
+                                score += WhiteKnightTable[row, col];
+                                break;
+                            case PieceType.Bishop:
+                                score += WhiteBishopTable[row, col];
+                                break;
+                            case PieceType.Rook:
+                                score += WhiteRookTable[row, col];
+                                break;
+                            case PieceType.Queen:
+                                score += WhiteQueenTable[row, col];
+                                break;
+                            case PieceType.King:
+                                score += WhiteKingMiddleGameTable[row, col];
+                                break;
+                        }
                     }
                     else if (piece.Color == PieceColor.Black)
                     {
-                        score -= GetPieceSquareValue(piece, row, col, false);
+                        switch (piece.Type)
+                        {
+                            case PieceType.Pawn:
+                                score -= BlackPawnTable[row, col];
+                                break;
+                            case PieceType.Knight:
+                                score -= BlackKnightTable[row, col];
+                                break;
+                            case PieceType.Bishop:
+                                score -= BlackBishopTable[row, col];
+                                break;
+                            case PieceType.Rook:
+                                score -= BlackRookTable[row, col];
+                                break;
+                            case PieceType.Queen:
+                                score -= BlackQueenTable[row, col];
+                                break;
+                            case PieceType.King:
+                                score -= BlackKingMiddleGameTable[row, col];
+                                break;
+                        }
                     }
                 }
             }
             return score;
-        }
-
-        private int GetPieceSquareValue(Piece piece, int row, int col, bool isWhite)
-        {
-            switch (piece.Type)
-            {
-                case PieceType.Pawn:
-                    return isWhite ? WhitePawnTable[row, col] : BlackPawnTable[row, col];
-                case PieceType.Knight:
-                    return isWhite ? WhiteKnightTable[row, col] : BlackKnightTable[row, col];
-                case PieceType.Bishop:
-                    return isWhite ? WhiteBishopTable[row, col] : BlackBishopTable[row, col];
-                case PieceType.Rook:
-                    return isWhite ? WhiteRookTable[row, col] : BlackRookTable[row, col];
-                case PieceType.Queen:
-                    return isWhite ? WhiteQueenTable[row, col] : BlackQueenTable[row, col];
-                case PieceType.King:
-                    return isWhite ? WhiteKingMiddleGameTable[row, col] : BlackKingMiddleGameTable[row, col];
-                default:
-                    return 0;
-            }
         }
 
 
@@ -235,118 +254,10 @@ namespace ZabkaChessEngine
 
         private int KingSafetyScore(Board board)
         {
-            int score = 0;
-            score += EvaluateKingSafety(board, PieceColor.White);
-            score -= EvaluateKingSafety(board, PieceColor.Black);
-            return score;
+            // Placeholder for a more complex king safety evaluation
+            // Implement king safety logic here
+            return 0;
         }
-
-        private int EvaluateKingSafety(Board board, PieceColor color)
-        {
-            int score = 0;
-            var kingPosition = FindKingPosition(board, color);
-
-            if (kingPosition == null)
-            {
-                // King is captured, return a large penalty
-                return color == PieceColor.White ? int.MinValue : int.MaxValue;
-            }
-
-            var kingRow = kingPosition.Item1;
-            var kingCol = kingPosition.Item2;
-
-            // Evaluate pawn shield
-            score += EvaluatePawnShield(board, kingRow, kingCol, color);
-
-            // Evaluate open files
-            score += EvaluateOpenFiles(board, kingRow, kingCol);
-
-            // Evaluate proximity of enemy pieces
-            score += EvaluateEnemyProximity(board, kingRow, kingCol, color);
-
-            return score;
-        }
-
-        private Tuple<int, int>? FindKingPosition(Board board, PieceColor color)
-        {
-            for (int row = 0; row < 8; row++)
-            {
-                for (int col = 0; col < 8; col++)
-                {
-                    if (board.Squares[row, col].Type == PieceType.King && board.Squares[row, col].Color == color)
-                    {
-                        return new Tuple<int, int>(row, col);
-                    }
-                }
-            }
-            return null; // Return null if the king is not found
-        }
-
-
-        private int EvaluatePawnShield(Board board, int kingRow, int kingCol, PieceColor color)
-        {
-            int score = 0;
-            int direction = color == PieceColor.White ? -1 : 1;
-
-            // Check pawns in front of the king
-            for (int col = kingCol - 1; col <= kingCol + 1; col++)
-            {
-                if (col >= 0 && col < 8)
-                {
-                    int row = kingRow + direction;
-                    if (row >= 0 && row < 8 && board.Squares[row, col].Type == PieceType.Pawn && board.Squares[row, col].Color == color)
-                    {
-                        score += 20; // Adjust value as needed
-                    }
-                }
-            }
-            return score;
-        }
-
-        private int EvaluateOpenFiles(Board board, int kingRow, int kingCol)
-        {
-            int score = 0;
-
-            // Check the file the king is on
-            bool openFile = true;
-            for (int row = 0; row < 8; row++)
-            {
-                if (board.Squares[row, kingCol].Type != PieceType.Empty && board.Squares[row, kingCol].Type != PieceType.King)
-                {
-                    openFile = false;
-                    break;
-                }
-            }
-            if (openFile)
-            {
-                score -= 30; // Penalty for being on an open file
-            }
-            return score;
-        }
-
-        private int EvaluateEnemyProximity(Board board, int kingRow, int kingCol, PieceColor color)
-        {
-            int score = 0;
-            PieceColor enemyColor = color == PieceColor.White ? PieceColor.Black : PieceColor.White;
-
-            // Check for enemy pieces near the king
-            for (int row = kingRow - 2; row <= kingRow + 2; row++)
-            {
-                for (int col = kingCol - 2; col <= kingCol + 2; col++)
-                {
-                    if (row >= 0 && row < 8 && col >= 0 && col < 8)
-                    {
-                        Piece piece = board.Squares[row, col];
-                        if (piece.Color == enemyColor)
-                        {
-                            score -= PieceValues[(int)piece.Type] / 10; // Penalty based on enemy piece value
-                        }
-                    }
-                }
-            }
-            return score;
-        }
-
     }
 
 }
