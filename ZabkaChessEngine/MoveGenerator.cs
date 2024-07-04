@@ -340,6 +340,30 @@ namespace ZabkaChessEngine
 
     public class MoveValidator
     {
+        private Stack<MoveInfo> moveHistory = new Stack<MoveInfo>();
+        private struct MoveInfo
+        {
+            public Move Move { get; }
+            public Piece CapturedPiece { get; }
+            public (int x, int y)? EnPassantTarget { get; }
+            public bool WhiteKingSideCastling { get; }
+            public bool WhiteQueenSideCastling { get; }
+            public bool BlackKingSideCastling { get; }
+            public bool BlackQueenSideCastling { get; }
+
+            public MoveInfo(Move move, Piece capturedPiece, (int x, int y)? enPassantTarget,
+                bool whiteKingSideCastling, bool whiteQueenSideCastling,
+                bool blackKingSideCastling, bool blackQueenSideCastling)
+            {
+                Move = move;
+                CapturedPiece = capturedPiece;
+                EnPassantTarget = enPassantTarget;
+                WhiteKingSideCastling = whiteKingSideCastling;
+                WhiteQueenSideCastling = whiteQueenSideCastling;
+                BlackKingSideCastling = blackKingSideCastling;
+                BlackQueenSideCastling = blackQueenSideCastling;
+            }
+        }
         public Move LastMove { get; set; }
         public (int x, int y)? enPassantTarget;
         public bool IsMoveLegal(Board board, Move move, bool isWhiteTurn)
@@ -350,13 +374,167 @@ namespace ZabkaChessEngine
                 return false;
             }
 
-            // Copy the board and apply the move
-            Board boardCopy = CopyBoard(board);
-            ApplyMove(boardCopy, move);
+            // Apply the move
+            MakeMove(board, move);
 
             // Check if the king is in check after the move
-            return !IsKingInCheck(boardCopy, isWhiteTurn);
-        }   
+            bool isLegal = !IsKingInCheck(board, isWhiteTurn);
+
+            // Undo the move
+            UnmakeMove(board);
+
+            return isLegal;
+        }
+        public void MakeMove(Board board, Move move)
+        {
+            Piece movingPiece = board.Squares[move.FromX, move.FromY];
+            Piece capturedPiece = board.Squares[move.ToX, move.ToY];
+            MoveInfo moveInfo = new MoveInfo(move, capturedPiece, board.EnPassantTarget,
+                board.WhiteKingSideCastling, board.WhiteQueenSideCastling,
+                board.BlackKingSideCastling, board.BlackQueenSideCastling);
+
+            // Handle castling
+            if (move.IsCastling)
+            {
+                HandleCastling(board, move);
+            }
+
+            // Handle en passant capture
+            if (movingPiece.Type == PieceType.Pawn && move.ToY != move.FromY && capturedPiece.Type == PieceType.Empty)
+            {
+                int direction = movingPiece.Color == PieceColor.White ? 1 : -1;
+                board.Squares[move.ToX - direction, move.ToY] = new Piece(PieceType.Empty, PieceColor.None);
+            }
+
+            // Update en passant target
+            if (movingPiece.Type == PieceType.Pawn && Math.Abs(move.ToX - move.FromX) == 2)
+            {
+                board.EnPassantTarget = ((move.FromX + move.ToX) / 2, move.FromY);
+            }
+            else
+            {
+                board.EnPassantTarget = null;
+            }
+
+            // Move the piece
+            if (move.Promotion != PieceType.Empty)
+            {
+                board.Squares[move.ToX, move.ToY] = new Piece(move.Promotion, movingPiece.Color);
+            }
+            else
+            {
+                board.Squares[move.ToX, move.ToY] = movingPiece;
+            }
+            board.Squares[move.FromX, move.FromY] = new Piece(PieceType.Empty, PieceColor.None);
+
+            // Update castling rights
+            UpdateCastlingRights(board, move, movingPiece);
+
+            moveHistory.Push(moveInfo);
+        }
+        public void UnmakeMove(Board board)
+        {
+            if (moveHistory.Count == 0)
+            {
+                throw new InvalidOperationException("No moves to undo.");
+            }
+
+            MoveInfo moveInfo = moveHistory.Pop();
+            Move move = moveInfo.Move;
+
+            // Restore the moving piece
+            board.Squares[move.FromX, move.FromY] = board.Squares[move.ToX, move.ToY];
+
+            // Restore the captured piece
+            board.Squares[move.ToX, move.ToY] = moveInfo.CapturedPiece;
+
+            // Handle unmaking castling
+            if (move.IsCastling)
+            {
+                UnmakeCastling(board, move);
+            }
+
+            // Handle unmaking en passant
+            if (board.Squares[move.FromX, move.FromY].Type == PieceType.Pawn &&
+                move.ToY != move.FromY && moveInfo.CapturedPiece.Type == PieceType.Empty)
+            {
+                int direction = board.Squares[move.FromX, move.FromY].Color == PieceColor.White ? 1 : -1;
+                board.Squares[move.ToX - direction, move.ToY] = new Piece(PieceType.Pawn, board.Squares[move.FromX, move.FromY].Color == PieceColor.White ? PieceColor.Black : PieceColor.White);
+            }
+
+            // Restore en passant target
+            board.EnPassantTarget = moveInfo.EnPassantTarget;
+
+            // Restore castling rights
+            board.WhiteKingSideCastling = moveInfo.WhiteKingSideCastling;
+            board.WhiteQueenSideCastling = moveInfo.WhiteQueenSideCastling;
+            board.BlackKingSideCastling = moveInfo.BlackKingSideCastling;
+            board.BlackQueenSideCastling = moveInfo.BlackQueenSideCastling;
+        }
+        private void HandleCastling(Board board, Move move)
+        {
+            int rookFromY, rookToY;
+            if (move.ToY == 6) // King-side castling
+            {
+                rookFromY = 7;
+                rookToY = 5;
+            }
+            else // Queen-side castling
+            {
+                rookFromY = 0;
+                rookToY = 3;
+            }
+
+            // Move the rook
+            board.Squares[move.ToX, rookToY] = board.Squares[move.ToX, rookFromY];
+            board.Squares[move.ToX, rookFromY] = new Piece(PieceType.Empty, PieceColor.None);
+        }
+
+        private void UnmakeCastling(Board board, Move move)
+        {
+            int rookFromY, rookToY;
+            if (move.ToY == 6) // King-side castling
+            {
+                rookFromY = 7;
+                rookToY = 5;
+            }
+            else // Queen-side castling
+            {
+                rookFromY = 0;
+                rookToY = 3;
+            }
+
+            // Move the rook back
+            board.Squares[move.ToX, rookFromY] = board.Squares[move.ToX, rookToY];
+            board.Squares[move.ToX, rookToY] = new Piece(PieceType.Empty, PieceColor.None);
+        }
+
+        private void UpdateCastlingRights(Board board, Move move, Piece movingPiece)
+        {
+            if (movingPiece.Type == PieceType.King)
+            {
+                if (movingPiece.Color == PieceColor.White)
+                {
+                    board.WhiteKingSideCastling = false;
+                    board.WhiteQueenSideCastling = false;
+                }
+                else
+                {
+                    board.BlackKingSideCastling = false;
+                    board.BlackQueenSideCastling = false;
+                }
+            }
+
+            // Update castling rights if rooks move or are captured
+            if ((move.FromX == 7 && move.FromY == 0) || (move.ToX == 7 && move.ToY == 0))
+                board.WhiteQueenSideCastling = false;
+            if ((move.FromX == 7 && move.FromY == 7) || (move.ToX == 7 && move.ToY == 7))
+                board.WhiteKingSideCastling = false;
+            if ((move.FromX == 0 && move.FromY == 0) || (move.ToX == 0 && move.ToY == 0))
+                board.BlackQueenSideCastling = false;
+            if ((move.FromX == 0 && move.FromY == 7) || (move.ToX == 0 && move.ToY == 7))
+                board.BlackKingSideCastling = false;
+        }
 
         private bool IsPieceMoveValid(Board board, Move move, (int x, int y)? enPassantTarget)
         {
