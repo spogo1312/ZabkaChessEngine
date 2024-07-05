@@ -373,17 +373,24 @@ namespace ZabkaChessEngine
             {
                 return false;
             }
-
-            // Apply the move
-            MakeMove(board, move);
+            Board boardCopy = CopyBoard(board);
+            ApplyMove(boardCopy, move);
 
             // Check if the king is in check after the move
-            bool isLegal = !IsKingInCheck(board, isWhiteTurn);
+            return !IsKingInCheck(boardCopy, isWhiteTurn);
 
-            // Undo the move
-            UnmakeMove(board);
+            //DOes not pass perft 4 kiwipite
 
-            return isLegal;
+            //// Apply the move
+            //MakeMove(board, move);
+
+            //// Check if the king is in check after the move
+            //bool isLegal = !IsKingInCheck(board, isWhiteTurn);
+
+            //// Undo the move
+            //UnmakeMove(board);
+
+            //return isLegal;
         }
         public void MakeMove(Board board, Move move)
         {
