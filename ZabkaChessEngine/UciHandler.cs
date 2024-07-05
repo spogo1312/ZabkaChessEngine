@@ -15,7 +15,7 @@ namespace ZabkaChessEngine
         private bool isWhiteTurn;
         private bool manualPlayMode;
         private bool botColorDetermined;
-        private int wtime, btime, winc, binc, movesToGo;
+
         public UciHandler()
         {
             board = new Board();
@@ -64,7 +64,7 @@ namespace ZabkaChessEngine
                     Console.WriteLine($"Bot turn to move: {isBotWhite == isWhiteTurn}");
                     if (isBotWhite == isWhiteTurn)
                     {
-                        HandleGoCommand(input);
+                        MakeBotMove();
                     }
                 }
                 else if (input == "quit")
@@ -88,7 +88,7 @@ namespace ZabkaChessEngine
                     {
                         if (IsBotTurn() && !manualPlayMode)
                         {
-                            MakeBotMove(1000);
+                            MakeBotMove();
                         }
                     }
                     else
@@ -103,7 +103,7 @@ namespace ZabkaChessEngine
                     {
                         if (IsBotTurn() && !manualPlayMode)
                         {
-                            MakeBotMove(1000);
+                            MakeBotMove();
                         }
                     }
                     else
@@ -258,10 +258,10 @@ namespace ZabkaChessEngine
             return isBotWhite == isWhiteTurn;
         }
 
-        private void MakeBotMove(int timeLimit)
+        private void MakeBotMove()
         {
             ChessEngine engine = new ChessEngine();
-            Move bestMove = engine.SelectBestMove(board, timeLimit);
+            Move bestMove = engine.SelectBestMove(board);
 
             if (bestMove.FromX != -1 && bestMove.FromY != -1)
             {
@@ -273,54 +273,6 @@ namespace ZabkaChessEngine
             {
                 Console.WriteLine("bestmove (none)");
             }
-        }
-        private void HandleGoCommand(string input)
-        {
-            string[] parts = input.Split(' ');
-            wtime = btime = winc = binc = -1;
-            movesToGo = -1;
-
-            for (int i = 1; i < parts.Length; i += 2)
-            {
-                switch (parts[i])
-                {
-                    case "wtime":
-                        wtime = int.Parse(parts[i + 1]);
-                        break;
-                    case "btime":
-                        btime = int.Parse(parts[i + 1]);
-                        break;
-                    case "winc":
-                        winc = int.Parse(parts[i + 1]);
-                        break;
-                    case "binc":
-                        binc = int.Parse(parts[i + 1]);
-                        break;
-                    case "movestogo":
-                        movesToGo = int.Parse(parts[i + 1]);
-                        break;
-                }
-            }
-            int timeLeft = isWhiteTurn ? wtime : btime;
-            int increment = isWhiteTurn ? winc : binc;
-            int timeToThink = CalculateThinkingTime(timeLeft, increment);
-            MakeBotMove(timeToThink);
-        }
-        private int CalculateThinkingTime(int timeLeft, int increment)
-        {
-            
-
-            if (timeLeft < 0 && increment < 0)
-                return 1000; // Default to 1 second if time control is not specified
-
-            int baseTime = timeLeft / 30; // Use 1/30th of remaining time as a base
-            if (movesToGo > 0)
-                baseTime = timeLeft / movesToGo; // If moves to go is specified, divide remaining time
-
-            int thinkingTime = baseTime + increment / 2;
-
-            // Ensure a minimum thinking time of 100ms and a maximum of 1/10th of remaining time
-            return Math.Max(100, Math.Min(thinkingTime, timeLeft / 10));
         }
         private string MoveToString(Move move)
         {

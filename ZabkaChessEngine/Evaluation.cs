@@ -254,8 +254,8 @@ namespace ZabkaChessEngine
 
         private int KingSafetyScore(Board board)
         {
-            // Placeholder for a more complex king safety evaluation
-            // Implement king safety logic here
+            // Placeholder for a king safety evaluation
+            
             return 0;
         }
     }

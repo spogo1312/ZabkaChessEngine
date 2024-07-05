@@ -11,74 +11,26 @@ namespace ZabkaChessEngine
     {
         private readonly Evaluation evaluation = new Evaluation();
         private readonly MoveValidator moveValidator = new MoveValidator();
-        private readonly MoveGenerator moveGenerator = new MoveGenerator();
-        Stopwatch stopwatch = new Stopwatch();
         long nodes = 0;
-        int MaxDepth = 10;
 
-        public Move SelectBestMove(Board board, int timeLimit)
+        public Move SelectBestMove(Board board)
         {
-            Move bestMove = Move.NoMove;
-
-            if (timeLimit <= 2000)
-            {
-
-                List<Move> allMoves = moveGenerator.GenerateAllMoves(board, board.IsWhiteTurn);
-                int bestScore = board.IsWhiteTurn ? int.MinValue : int.MaxValue;
-                foreach (Move move in allMoves)
-                {
-                    if (moveValidator.IsMoveLegal(board, move, board.IsWhiteTurn))
-                    {
-                        Board boardCopy = CopyBoard(board);
-                        moveValidator.ApplyMove(boardCopy, move);
-
-                        int score = Minimax(boardCopy, 3, int.MinValue, int.MaxValue, !board.IsWhiteTurn); // Reduced depth to 3
-
-                        if ((board.IsWhiteTurn && score > bestScore) || (!board.IsWhiteTurn && score < bestScore))
-                        {
-                            bestScore = score;
-                            bestMove = move;
-                        }
-                    }
-                }
-            }
-            else 
-            {
-
-                for (int depth = 1; depth <= MaxDepth; depth++)
-                {
-                    Move move = SearchWithTimeLimit(board, depth, timeLimit);
-                    if (!move.Equals(Move.NoMove))
-                        bestMove = move;
-                    else
-                        break; // Time limit reached
-                }
-            }
-           
-            
-            Console.WriteLine("Nodes searched:" + nodes);
-            Console.WriteLine("Move Time:" + stopwatch.ElapsedMilliseconds + "ms");
-            return bestMove;
-        }
-        private Move SearchWithTimeLimit(Board board, int depth, int timeLimit)
-        {
-            stopwatch = Stopwatch.StartNew();
-            Move bestMove = Move.NoMove;
+            Stopwatch stopwatch = new Stopwatch();
+            stopwatch.Start();
             int bestScore = board.IsWhiteTurn ? int.MinValue : int.MaxValue;
+            Move bestMove = Move.NoMove;
 
+            MoveGenerator moveGenerator = new MoveGenerator();
             List<Move> allMoves = moveGenerator.GenerateAllMoves(board, board.IsWhiteTurn);
 
             foreach (Move move in allMoves)
             {
-                if (stopwatch.ElapsedMilliseconds > timeLimit)
-                    return Move.NoMove; // Time limit reached
-
                 if (moveValidator.IsMoveLegal(board, move, board.IsWhiteTurn))
                 {
                     Board boardCopy = CopyBoard(board);
                     moveValidator.ApplyMove(boardCopy, move);
 
-                    int score = Minimax(boardCopy, depth - 1, int.MinValue, int.MaxValue, !board.IsWhiteTurn);
+                    int score = Minimax(boardCopy, 3, int.MinValue, int.MaxValue, !board.IsWhiteTurn); // Reduced depth to 3
 
                     if ((board.IsWhiteTurn && score > bestScore) || (!board.IsWhiteTurn && score < bestScore))
                     {
@@ -88,6 +40,8 @@ namespace ZabkaChessEngine
                 }
             }
             stopwatch.Stop();
+            Console.WriteLine("Nodes searched:" + nodes);       
+            Console.WriteLine("Move Time:" + stopwatch.ElapsedMilliseconds + "ms");
             Console.WriteLine("evaluation:" + bestScore);
             return bestMove;
         }
@@ -103,6 +57,20 @@ namespace ZabkaChessEngine
 
             MoveGenerator moveGenerator = new MoveGenerator();
             List<Move> allMoves = moveGenerator.GenerateAllMoves(board, isMaximizingPlayer);
+
+            // Evaluate and sort moves based on their heuristic evaluation
+            //allMoves.Sort((move1, move2) =>
+            //{
+            //    Board boardCopy1 = CopyBoard(board);
+            //    moveValidator.ApplyMove(boardCopy1, move1);
+            //    int eval1 = evaluation.Evaluate(boardCopy1);
+
+            //    Board boardCopy2 = CopyBoard(board);
+            //    moveValidator.ApplyMove(boardCopy2, move2);
+            //    int eval2 = evaluation.Evaluate(boardCopy2);
+
+            //    return isMaximizingPlayer ? eval2.CompareTo(eval1) : eval1.CompareTo(eval2);
+            //});
 
             if (isMaximizingPlayer)
             {
